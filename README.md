@@ -1,46 +1,132 @@
-# U-Talk: complete app (onboarding, home, roadmap, challenge mode, AI practice)
+<p align="center">
+  <img src="docs/logo.png" width="90" alt="U-Talk logo">
+</p>
 
-## Before the first run
+<h1 align="center">U-Talk 🗣️💚</h1>
 
-1. Copy the AI model into the app folder. It isn't included because it's 363 MB:
-   ```bash
-   cp -R ~/Desktop/U-TALK/backend/analysis_reports/coreml/U_TALK_WavLM.mlpackage ~/Desktop/U-Talk/U-Talk/
-   ```
-2. Point the app at your backend's current IP:
-   ```bash
-   IP=$(ipconfig getifaddr en0) && sed -i '' -E "s#http://[0-9.]+:8000#http://$IP:8000#" ~/Desktop/U-Talk/U-Talk/Conversation.swift
-   ```
-3. Start the backend: `~/Desktop/U-TALK/backend/start_backend.sh`
-4. Open `U-Talk.xcodeproj`, select your iPhone, then Clean Build Folder (⇧⌘K) and Run (⌘R).
+<p align="center">
+  <b>Practice speaking. At your own pace. Without the pressure.</b><br>
+  An iOS app that helps people who stutter rehearse real-life conversations with a friendly AI partner,<br>
+  and gives gentle, on-device feedback after every session.
+</p>
 
-## Project setup
+<p align="center">
+  <img src="https://img.shields.io/badge/iOS-SwiftUI-274F48?style=for-the-badge&logo=swift&logoColor=white">
+  <img src="https://img.shields.io/badge/AI-Core%20ML%20%C2%B7%20WavLM-B7D1FB?style=for-the-badge&logo=apple&logoColor=274F48">
+  <img src="https://img.shields.io/badge/Backend-FastAPI-EDFCD6?style=for-the-badge&logo=fastapi&logoColor=274F48">
+  <img src="https://img.shields.io/badge/Voices-Azure%20Speech-CCF1FD?style=for-the-badge&logo=microsoftazure&logoColor=274F48">
+</p>
 
-- Every file in the `U-Talk/` folder is part of the app automatically (synchronized folder), so there's nothing to add by hand.
-- Settings match the original U-Talk project: default MainActor isolation, approachable concurrency, Swift 5, iOS 27, iPhone only.
-- The microphone, speech recognition and local network permissions are already set. HTTP to the local backend is allowed for development only.
-- Signing team ZDC5U7W2VC, bundle ID `com.yusr.utalk`. If you sign with another team, change both under Signing & Capabilities.
-- Lessons map to practice scenarios in `PracticeIntegration.swift`. "At the Airport" shows "coming soon".
+<p align="center">
+  <img src="docs/screenshots/all-screens.png" width="100%" alt="U-Talk practice screens">
+</p>
 
-## Setup
+---
 
-### 1. AI model (required to build the app)
-The Core ML model is too large for git, so it is attached to a release.
-1. Download `U_TALK_WavLM.mlpackage.zip` from [Releases → model-v1](https://github.com/NouraAlGahtani/U-Talk/releases/tag/model-v1).
+## ✨ What is U-Talk?
+
+Ordering food, a job interview, a phone call… everyday moments that can feel huge when you stutter.
+**U-Talk turns them into a safe rehearsal space**: pick a situation, talk it through with an AI character who never rushes you,
+then see what went well. No audience, no judgement, and **your voice never leaves your iPhone** for the analysis.
+
+## 🎮 Features
+
+| | |
+|---|---|
+| 🗺️ **Personal roadmap** | A 6-day plan built from the situations *you* said feel hardest during onboarding. Finish a day to unlock the next, and replay any day you've done. |
+| 🤖 **AI conversations** | Talk with a waiter, an interviewer, a customer-service agent, an airline agent… Unlimited turns, a hint button when you get stuck. |
+| 🎭 **Role-play challenges** | Spin the wheel and become a journalist, a detective or a secret agent. Five story scenarios, each with its own character voice. |
+| 📜 **Script practice** | Read a short script aloud, record it, listen back, retry as many times as you like. |
+| 📊 **On-device feedback** | Fluency, pace & pauses, and (for scripts) clarity, computed on the iPhone with our Core ML model. |
+| 🕓 **Practice history** | Every session saved with the full conversation and its feedback. Delete one or clear everything anytime. |
+| 👋 **Talk About Yourself** | A warm “get to know you” chat that greets you by name. |
+
+## 📱 The practice screens
+
+> Design mockups of the practice flow. The numbers shown are sample values, not real results.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/practice.png" width="200"><br><sub><b>Pick a scenario</b></sub></td>
+    <td align="center"><img src="docs/screenshots/scenario-intro.png" width="200"><br><sub><b>See the plan</b></sub></td>
+    <td align="center"><img src="docs/screenshots/ai-conversation.png" width="200"><br><sub><b>Talk with the AI</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/story-end.png" width="200"><br><sub><b>Finish the story</b></sub></td>
+    <td align="center"><img src="docs/screenshots/script-practice.png" width="200"><br><sub><b>Practice a script</b></sub></td>
+    <td align="center"><img src="docs/screenshots/feedback.png" width="200"><br><sub><b>Get feedback</b></sub></td>
+  </tr>
+</table>
+
+## 🧠 How it works
+
+```mermaid
+flowchart LR
+    A["🎙️ You speak"] --> B["iPhone records<br/>16 kHz mono"]
+    B --> C["WavLM Core ML model<br/>(on device)"]
+    C --> D["📊 Feedback<br/>fluency · pace · pauses"]
+    B --> E["On-device speech<br/>recognition"]
+    E --> F["FastAPI backend<br/>on your Mac"]
+    F --> G["Ollama (qwen3)<br/>writes the reply"]
+    G --> H["Azure neural voice<br/>speaks it 🔊"]
+```
+
+**The speech model** is `microsoft/wavlm-base-plus` fine-tuned with LoRA, converted to Core ML.
+It listens in 3-second windows and labels each one as *Prolongation, Repetition, Block, Interjection* or *Fluent*.
+
+What we've verified so far:
+- ✅ The Core ML model matches the original PyTorch model on **422 / 422** UCLASS audio windows (max difference 0.0002).
+  This shows the conversion is faithful. It is **not** an accuracy score against ground-truth labels.
+- ⚡ Core ML inference took about **25 ms per 3-second window on a MacBook (M4)**. iPhone measurements are still to come.
+
+> 💚 U-Talk is a practice companion. Its feedback is **not** a diagnosis and the model has not been clinically validated.
+
+## 🚀 Run it yourself
+
+### 1. Get the AI model
+The Core ML model (~360 MB) is too big for git, so it lives on the Releases page.
+1. Download `U_TALK_WavLM.mlpackage.zip` from **[Releases → model-v1](https://github.com/NouraAlGahtani/U-Talk/releases/tag/model-v1)**.
 2. Unzip it and put `U_TALK_WavLM.mlpackage` inside the `U-Talk/` folder (next to `ContentView.swift`).
-3. Open `U-Talk.xcodeproj` in Xcode, choose your iPhone, and press ⌘R.
 
-The model runs on the iPhone only; recordings are not uploaded anywhere.
+### 2. Run the app
+Open `U-Talk.xcodeproj` in Xcode, pick your iPhone, press **⌘R**. 🎉
 
-### 2. Backend (AI conversation partner + Azure voices)
-Runs on a Mac on the same Wi-Fi as the iPhone.
-1. Store the Azure Speech key in the Mac Keychain (once):
-   `security add-generic-password -U -a "$USER" -s utalk-azure-speech -w`
-2. Start the backend: `./backend/start_backend.sh`
-3. Point the app at this Mac's IP, then rebuild in Xcode (⌘R):
-   `IP=$(ipconfig getifaddr en0) && sed -i '' -E "s#http://[0-9.]+:8000#http://$IP:8000#" U-Talk/Conversation.swift`
+### 3. Start the AI partner (optional but fun)
+Runs on a Mac on the **same Wi-Fi** as the iPhone. Without it, the app still works with built-in sample replies.
 
-### Not in this repo
-Python virtual environments, the PyTorch training checkpoint, dataset audio (SEP-28k, UCLASS) and test recordings stay local because of size, dataset licences and privacy.
+```bash
+# one-time setup
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+ollama pull qwen3:8b
+security add-generic-password -U -a "$USER" -s utalk-azure-speech -w   # paste your Azure Speech key
 
-### Note
-The stutter classifier gives practice feedback. It has not been clinically validated and is not a diagnostic tool.
+# every time
+./start_backend.sh
+```
+
+Then point the app at your Mac and rebuild (⌘R). Do this again whenever you change Wi-Fi:
+```bash
+IP=$(ipconfig getifaddr en0) && sed -i '' -E "s#http://[0-9.]+:8000#http://$IP:8000#" U-Talk/Conversation.swift
+```
+
+### 🙈 Not in this repo
+Python environments, the PyTorch training checkpoint, dataset audio (SEP-28k, UCLASS) and test recordings stay local:
+they're huge, covered by dataset licences, or contain someone's voice.
+
+## 🔒 Privacy
+
+- Speech analysis runs **on the iPhone**. Recordings are never uploaded.
+- Practice history is stored **only on the device**, as text and numbers. No audio is kept.
+- The backend sees only the text of the conversation, so it can write the AI's reply.
+
+## 👩‍💻 Team
+
+| | |
+|---|---|
+| **Noura AlGahtani** | AI model, Core ML integration, practice screens, backend |
+| **Jana Almuhayzi** | Onboarding, Home, Roadmap, Challenge mode, history |
+| **Maysam** | Profile & Settings |
+
+<p align="center"><sub>Made with 💚 and a lot of patience. One step at a time.</sub></p>
