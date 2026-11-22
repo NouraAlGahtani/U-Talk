@@ -1,0 +1,363 @@
+{
+  "filename": "test3.wav",
+  "duration_seconds": 21.29,
+  "transcript": "就可以 What... Can I get the... iced Americano please?",
+  "transcript_segments": [
+    {
+      "start": 0.5,
+      "end": 4.7,
+      "text": "就可以"
+    },
+    {
+      "start": 4.7,
+      "end": 6.7,
+      "text": "What..."
+    },
+    {
+      "start": 11.7,
+      "end": 13.7,
+      "text": "Can I get the..."
+    },
+    {
+      "start": 17.7,
+      "end": 20.7,
+      "text": "iced Americano please?"
+    }
+  ],
+  "text_analysis": {
+    "total_words": 9,
+    "unique_words": 9,
+    "unique_word_list": [
+      "americano",
+      "can",
+      "get",
+      "i",
+      "iced",
+      "please",
+      "the",
+      "what",
+      "就可以"
+    ],
+    "vocabulary_diversity": 1.0,
+    "top_words": {
+      "就可以": 1,
+      "what": 1,
+      "can": 1,
+      "i": 1,
+      "get": 1,
+      "the": 1,
+      "iced": 1,
+      "americano": 1,
+      "please": 1
+    },
+    "repeated_vocabulary": {},
+    "adjacent_repeated_words": [],
+    "filler_counts": {},
+    "total_candidate_fillers": 0,
+    "recording_wpm": 25.36
+  },
+  "pause_analysis": {
+    "speech_active_seconds": 15.98,
+    "pause_count": 5,
+    "pauses": [
+      {
+        "start": 0.0,
+        "end": 0.38,
+        "duration": 0.38
+      },
+      {
+        "start": 1.52,
+        "end": 2.34,
+        "duration": 0.82
+      },
+      {
+        "start": 10.06,
+        "end": 10.88,
+        "duration": 0.82
+      },
+      {
+        "start": 17.12,
+        "end": 17.74,
+        "duration": 0.62
+      },
+      {
+        "start": 20.12,
+        "end": 21.28,
+        "duration": 1.16
+      }
+    ],
+    "total_pause_seconds": 3.8,
+    "energy_threshold": 0.0396
+  },
+  "active_speech_wpm": 33.79,
+  "stuttering_analysis": {
+    "window_count": 21,
+    "window_predictions": [
+      {
+        "start": 0.0,
+        "end": 3.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.3922,
+          "Repetition": 0.0256,
+          "Block": 0.0733,
+          "Interjection": 0.4843,
+          "Fluent": 0.0247
+        }
+      },
+      {
+        "start": 1.0,
+        "end": 4.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.3356,
+          "Repetition": 0.0639,
+          "Block": 0.0795,
+          "Interjection": 0.4915,
+          "Fluent": 0.0295
+        }
+      },
+      {
+        "start": 2.0,
+        "end": 5.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.2913,
+          "Repetition": 0.4546,
+          "Block": 0.0921,
+          "Interjection": 0.1188,
+          "Fluent": 0.0432
+        }
+      },
+      {
+        "start": 3.0,
+        "end": 6.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.0342,
+          "Repetition": 0.7232,
+          "Block": 0.2064,
+          "Interjection": 0.0165,
+          "Fluent": 0.0197
+        }
+      },
+      {
+        "start": 4.0,
+        "end": 7.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.1053,
+          "Repetition": 0.6459,
+          "Block": 0.1852,
+          "Interjection": 0.0472,
+          "Fluent": 0.0164
+        }
+      },
+      {
+        "start": 5.0,
+        "end": 8.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.2782,
+          "Repetition": 0.5318,
+          "Block": 0.1381,
+          "Interjection": 0.0332,
+          "Fluent": 0.0188
+        }
+      },
+      {
+        "start": 6.0,
+        "end": 9.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.1396,
+          "Repetition": 0.753,
+          "Block": 0.045,
+          "Interjection": 0.0321,
+          "Fluent": 0.0303
+        }
+      },
+      {
+        "start": 7.0,
+        "end": 10.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.1945,
+          "Repetition": 0.7061,
+          "Block": 0.0372,
+          "Interjection": 0.0227,
+          "Fluent": 0.0396
+        }
+      },
+      {
+        "start": 8.0,
+        "end": 11.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.3989,
+          "Repetition": 0.4507,
+          "Block": 0.0886,
+          "Interjection": 0.0439,
+          "Fluent": 0.018
+        }
+      },
+      {
+        "start": 9.0,
+        "end": 12.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.3237,
+          "Repetition": 0.1014,
+          "Block": 0.1175,
+          "Interjection": 0.4325,
+          "Fluent": 0.0249
+        }
+      },
+      {
+        "start": 10.0,
+        "end": 13.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.1427,
+          "Repetition": 0.0351,
+          "Block": 0.0658,
+          "Interjection": 0.7354,
+          "Fluent": 0.0209
+        }
+      },
+      {
+        "start": 11.0,
+        "end": 14.0,
+        "prediction": "Prolongation",
+        "probabilities": {
+          "Prolongation": 0.5374,
+          "Repetition": 0.0557,
+          "Block": 0.0378,
+          "Interjection": 0.3116,
+          "Fluent": 0.0575
+        }
+      },
+      {
+        "start": 12.0,
+        "end": 15.0,
+        "prediction": "Prolongation",
+        "probabilities": {
+          "Prolongation": 0.6343,
+          "Repetition": 0.1081,
+          "Block": 0.043,
+          "Interjection": 0.1435,
+          "Fluent": 0.0711
+        }
+      },
+      {
+        "start": 13.0,
+        "end": 16.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.3286,
+          "Repetition": 0.5774,
+          "Block": 0.0134,
+          "Interjection": 0.0577,
+          "Fluent": 0.0229
+        }
+      },
+      {
+        "start": 14.0,
+        "end": 17.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.0947,
+          "Repetition": 0.7909,
+          "Block": 0.0163,
+          "Interjection": 0.073,
+          "Fluent": 0.0251
+        }
+      },
+      {
+        "start": 15.0,
+        "end": 18.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.1773,
+          "Repetition": 0.5886,
+          "Block": 0.0737,
+          "Interjection": 0.1378,
+          "Fluent": 0.0227
+        }
+      },
+      {
+        "start": 16.0,
+        "end": 19.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.1164,
+          "Repetition": 0.4029,
+          "Block": 0.1006,
+          "Interjection": 0.3303,
+          "Fluent": 0.0499
+        }
+      },
+      {
+        "start": 17.0,
+        "end": 20.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0814,
+          "Repetition": 0.1389,
+          "Block": 0.1673,
+          "Interjection": 0.5189,
+          "Fluent": 0.0935
+        }
+      },
+      {
+        "start": 18.0,
+        "end": 21.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.1781,
+          "Repetition": 0.1729,
+          "Block": 0.1312,
+          "Interjection": 0.2764,
+          "Fluent": 0.2414
+        }
+      },
+      {
+        "start": 19.0,
+        "end": 21.29,
+        "prediction": "Fluent",
+        "probabilities": {
+          "Prolongation": 0.0596,
+          "Repetition": 0.005,
+          "Block": 0.0298,
+          "Interjection": 0.0113,
+          "Fluent": 0.8943
+        }
+      },
+      {
+        "start": 20.0,
+        "end": 21.29,
+        "prediction": "Fluent",
+        "probabilities": {
+          "Prolongation": 0.2433,
+          "Repetition": 0.0333,
+          "Block": 0.1744,
+          "Interjection": 0.1241,
+          "Fluent": 0.425
+        }
+      }
+    ],
+    "prediction_counts": {
+      "Interjection": 6,
+      "Repetition": 11,
+      "Prolongation": 2,
+      "Fluent": 2
+    },
+    "average_probabilities": {
+      "Prolongation": 0.2423,
+      "Repetition": 0.3507,
+      "Block": 0.0912,
+      "Interjection": 0.2116,
+      "Fluent": 0.1043
+    }
+  }
+}

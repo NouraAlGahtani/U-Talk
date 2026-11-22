@@ -1,0 +1,432 @@
+import json
+import re
+import soundfile as sf
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from transformers import WavLMConfig, WavLMModel
+from peft import LoraConfig, get_peft_model
+import mlx_whisper
+
+# ---------------- CONFIGURATION ----------------
+
+AUDIO_FILES = ["test2.wav", "test3.wav"]
+CHECKPOINT_PATH = "models/stuttering/best_model_wavlm_lora.pt"
+WHISPER_MODEL = "mlx-community/whisper-small-mlx"
+
+SAMPLE_RATE = 16000
+WINDOW_SECONDS = 3
+HOP_SECONDS = 1
+MAX_SAMPLES = SAMPLE_RATE * WINDOW_SECONDS
+
+LABELS = [
+    "Prolongation",
+    "Repetition",
+    "Block",
+    "Interjection",
+    "Fluent"
+]
+
+# ---------------- AUDIO LOADING ----------------
+
+def read_wav(path):
+    audio, sample_rate = sf.read(
+        str(path),
+        dtype="float32",
+        always_2d=True
+    )
+    audio = audio.T.copy()
+    return torch.from_numpy(audio), sample_rate
+
+
+# ---------------- WAVLM MODEL ----------------
+
+class AttentiveStatisticsPooling(nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.attention = nn.Sequential(
+            nn.Linear(input_dim, input_dim // 4),
+            nn.Tanh(),
+            nn.Linear(input_dim // 4, 1)
+        )
+
+    def forward(self, x):
+        weights = F.softmax(self.attention(x), dim=1)
+        mean = torch.sum(x * weights, dim=1)
+        variance = torch.sum(
+            weights * (x - mean.unsqueeze(1)) ** 2,
+            dim=1
+        )
+        std = torch.sqrt(variance.clamp(min=1e-8))
+        return torch.cat([mean, std], dim=1)
+
+
+class WavLMLoRAClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        config = WavLMConfig.from_pretrained(
+            "microsoft/wavlm-base-plus"
+        )
+        wavlm = WavLMModel(config)
+
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=16,
+            lora_dropout=0.1,
+            target_modules=["q_proj", "v_proj"],
+            bias="none"
+        )
+
+        self.wavlm = get_peft_model(wavlm, lora_config)
+        self.pooling = AttentiveStatisticsPooling(config.hidden_size)
+        self.classifier = nn.Sequential(
+            nn.Linear(config.hidden_size * 2, 256),
+            nn.GELU(),
+            nn.LayerNorm(256),
+            nn.Dropout(0.2),
+            nn.Linear(256, 5)
+        )
+
+    def forward(self, input_values):
+        features = self.wavlm(input_values).last_hidden_state
+        return self.classifier(self.pooling(features))
+
+
+def load_classifier():
+    print("\nLoading WavLM checkpoint...")
+
+    device = torch.device(
+        "mps" if torch.backends.mps.is_available() else "cpu"
+    )
+
+    model = WavLMLoRAClassifier()
+    checkpoint = torch.load(
+        CHECKPOINT_PATH,
+        map_location="cpu",
+        weights_only=True
+    )
+    model.load_state_dict(
+        checkpoint["model_state_dict"],
+        strict=True
+    )
+    model.to(device)
+    model.eval()
+
+    print(f"WavLM ready on {device}")
+    return model, device
+
+
+# ---------------- STUTTERING ANALYSIS ----------------
+
+def analyze_stuttering(audio, model, device):
+    predictions = []
+
+    step = SAMPLE_RATE * HOP_SECONDS
+
+    for start in range(0, len(audio), step):
+        end = start + MAX_SAMPLES
+        chunk = audio[start:end]
+
+        if len(chunk) < SAMPLE_RATE:
+            break
+
+        if len(chunk) < MAX_SAMPLES:
+            chunk = np.pad(
+                chunk,
+                (0, MAX_SAMPLES - len(chunk))
+            )
+
+        waveform = torch.from_numpy(
+            chunk.astype(np.float32)
+        ).unsqueeze(0).to(device)
+
+        with torch.no_grad():
+            logits = model(waveform)
+            probabilities = F.softmax(logits, dim=1)[0].cpu().tolist()
+
+        predicted_index = int(np.argmax(probabilities))
+
+        predictions.append({
+            "start_seconds": round(start / SAMPLE_RATE, 2),
+            "end_seconds": round(
+                min(end, len(audio)) / SAMPLE_RATE, 2
+            ),
+            "predicted_class": LABELS[predicted_index],
+            "probabilities": {
+                label: round(float(prob), 4)
+                for label, prob in zip(LABELS, probabilities)
+            }
+        })
+
+    return predictions
+
+
+# ---------------- TRANSCRIPTION ----------------
+
+def transcribe_audio(path):
+    print(f"Transcribing {path}...")
+
+    result = mlx_whisper.transcribe(
+        str(path),
+        path_or_hf_repo=WHISPER_MODEL,
+        language="en",
+        condition_on_previous_text=False
+    )
+
+    segments = result.get("segments", [])
+    transcript = result.get("text", "").strip()
+
+    segment_data = []
+
+    for segment in segments:
+        segment_data.append({
+            "start": round(float(segment["start"]), 2),
+            "end": round(float(segment["end"]), 2),
+            "text": segment["text"].strip()
+        })
+
+    return transcript, segment_data
+
+
+# ---------------- VOCABULARY ANALYSIS ----------------
+
+FILLER_PATTERNS = {
+    "um": r"\bum+\b",
+    "uh": r"\buh+\b",
+    "you know": r"\byou know\b",
+    "i mean": r"\bi mean\b",
+    "like": r"\blike\b",
+    "basically": r"\bbasically\b",
+    "actually": r"\bactually\b",
+    "well": r"\bwell\b",
+    "so": r"\bso\b",
+    "hmm": r"\bhm+\b"
+}
+
+
+def analyze_text(transcript):
+    words = re.findall(
+        r"\b[\w']+\b",
+        transcript.lower()
+    )
+
+    filler_counts = {}
+
+    for filler, pattern in FILLER_PATTERNS.items():
+        count = len(re.findall(pattern, transcript.lower()))
+        if count:
+            filler_counts[filler] = count
+
+    repeated_words = []
+
+    for previous, current in zip(words, words[1:]):
+        if previous == current:
+            repeated_words.append(current)
+
+    unique_words = sorted(set(words))
+
+    frequencies = {}
+
+    for word in words:
+        frequencies[word] = frequencies.get(word, 0) + 1
+
+    common_words = sorted(
+        frequencies.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )[:10]
+
+    return {
+        "total_words": len(words),
+        "unique_words": len(unique_words),
+        "vocabulary_ratio": round(
+            len(unique_words) / len(words), 3
+        ) if words else 0,
+        "filler_counts": filler_counts,
+        "total_filler_occurrences": sum(filler_counts.values()),
+        "adjacent_repeated_words": repeated_words,
+        "most_used_words": [
+            {"word": word, "count": count}
+            for word, count in common_words
+        ]
+    }
+
+
+# ---------------- PAUSE ANALYSIS ----------------
+
+def analyze_pauses(audio):
+    frame_size = 320  # 20 ms at 16 kHz
+    frame_count = len(audio) // frame_size
+
+    if frame_count == 0:
+        return {"pauses": [], "speech_duration_seconds": 0}
+
+    frames = audio[:frame_count * frame_size].reshape(
+        frame_count, frame_size
+    )
+
+    rms = np.sqrt(np.mean(frames ** 2, axis=1))
+    noise_floor = float(np.percentile(rms, 20))
+    threshold = max(0.008, noise_floor * 2.5)
+
+    is_speech = rms > threshold
+
+    # Fill very short gaps (under 100 ms).
+    for i in range(1, len(is_speech) - 4):
+        if is_speech[i - 1] and is_speech[i + 4]:
+            is_speech[i:i + 4] = True
+
+    changes = np.diff(
+        np.concatenate(([False], is_speech, [False])).astype(int)
+    )
+
+    starts = np.where(changes == 1)[0]
+    ends = np.where(changes == -1)[0]
+
+    regions = []
+
+    for start, end in zip(starts, ends):
+        if (end - start) * 0.02 >= 0.12:
+            regions.append((start * 0.02, end * 0.02))
+
+    pauses = []
+
+    for previous, following in zip(regions, regions[1:]):
+        gap = following[0] - previous[1]
+
+        if gap >= 0.35:
+            pauses.append({
+                "start_seconds": round(previous[1], 2),
+                "end_seconds": round(following[0], 2),
+                "duration_seconds": round(gap, 2)
+            })
+
+    speech_duration = sum(
+        end - start for start, end in regions
+    )
+
+    return {
+        "pauses": pauses,
+        "pause_count": len(pauses),
+        "average_pause_seconds": round(
+            float(np.mean([p["duration_seconds"] for p in pauses])), 2
+        ) if pauses else 0,
+        "longest_pause_seconds": max(
+            [p["duration_seconds"] for p in pauses],
+            default=0
+        ),
+        "speech_duration_seconds": round(speech_duration, 2),
+        "energy_threshold": round(threshold, 5)
+    }
+
+
+# ---------------- COMPLETE ANALYSIS ----------------
+
+def analyze_recording(path, model, device):
+    print("\n" + "=" * 55)
+    print(f"ANALYZING {path}")
+    print("=" * 55)
+
+    audio, sample_rate = read_wav(path)
+
+    if sample_rate != SAMPLE_RATE:
+        raise ValueError(
+            f"{path} must be 16 kHz. Found {sample_rate} Hz."
+        )
+
+    duration = len(audio) / SAMPLE_RATE
+
+    transcript, segments = transcribe_audio(path)
+    text_results = analyze_text(transcript)
+    pause_results = analyze_pauses(audio)
+
+    speech_duration = pause_results["speech_duration_seconds"]
+    total_words = text_results["total_words"]
+
+    pace = round(
+        total_words / (speech_duration / 60), 1
+    ) if speech_duration > 0 else 0
+
+    overall_pace = round(
+        total_words / (duration / 60), 1
+    ) if duration > 0 else 0
+
+    stuttering_results = analyze_stuttering(
+        audio, model, device
+    )
+
+    report = {
+        "recording": path,
+        "duration_seconds": round(duration, 2),
+        "transcript": transcript,
+        "transcript_segments": segments,
+        "vocabulary": text_results,
+        "pauses": pause_results,
+        "speaking_pace": {
+            "words_per_minute_during_detected_speech": pace,
+            "words_per_minute_over_full_recording": overall_pace
+        },
+        "stuttering_window_predictions": stuttering_results,
+        "limitations": [
+            "Whisper may omit fillers and repetitions.",
+            "Pause detection is based on audio energy and is approximate.",
+            "Speech pace depends on the accuracy of transcription and voice activity detection.",
+            "WavLM outputs are experimental segment-level predictions, not confirmed events or diagnoses.",
+            "A predicted Fluent class does not establish that a segment contains no stuttering."
+        ]
+    }
+
+    output_path = Path(path).with_suffix(".analysis.json")
+
+    with open(output_path, "w", encoding="utf-8") as file:
+        json.dump(report, file, indent=2, ensure_ascii=False)
+
+    print("\nTRANSCRIPT")
+    print(transcript)
+
+    print("\nVOCABULARY")
+    print(f"Total words: {total_words}")
+    print(f"Unique words: {text_results['unique_words']}")
+    print(f"Fillers: {text_results['filler_counts']}")
+    print(f"Adjacent repeated words: {text_results['adjacent_repeated_words']}")
+
+    print("\nPAUSES")
+    print(f"Pause count: {pause_results['pause_count']}")
+    print(f"Average pause: {pause_results['average_pause_seconds']} sec")
+    print(f"Longest pause: {pause_results['longest_pause_seconds']} sec")
+
+    print("\nPACE")
+    print(f"During detected speech: {pace} WPM")
+    print(f"Across full recording: {overall_pace} WPM")
+
+    print("\nWAVLM PREDICTIONS")
+
+    for item in stuttering_results:
+        print(
+            f"{item['start_seconds']:>5.1f}s - "
+            f"{item['end_seconds']:>5.1f}s: "
+            f"{item['predicted_class']}"
+        )
+
+    print(f"\nSaved report: {output_path}")
+
+
+def main():
+    for path in AUDIO_FILES:
+        if not Path(path).exists():
+            raise FileNotFoundError(f"Missing audio file: {path}")
+
+    model, device = load_classifier()
+
+    for path in AUDIO_FILES:
+        analyze_recording(path, model, device)
+
+    print("\nBOTH RECORDINGS ANALYZED.")
+
+
+if __name__ == "__main__":
+    main()

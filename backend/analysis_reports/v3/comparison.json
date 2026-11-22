@@ -1,0 +1,79 @@
+{
+  "test2.wav": {
+    "duration_seconds": 17.09,
+    "total_words": 46,
+    "unique_words": 34,
+    "candidate_fillers": 2,
+    "adjacent_repetitions": 0,
+    "pause_count": 4,
+    "total_pause_seconds": 1.78,
+    "recording_wpm": 161.51,
+    "active_speech_wpm": 198.28,
+    "active_speech_wpm_reliable": true,
+    "transcript_quality": {
+      "contains_non_latin_characters": false,
+      "non_latin_character_count": 0,
+      "word_metrics_reliable": true,
+      "warnings": []
+    },
+    "long_pause_count": 0,
+    "wavlm_candidate_region_count": 3,
+    "user_validation_context": {
+      "description": "User-described normal speech",
+      "patterns": []
+    },
+    "wavlm_predictions": {
+      "Interjection": 12,
+      "Repetition": 2,
+      "Fluent": 3
+    },
+    "wavlm_average_probabilities": {
+      "Prolongation": 0.036,
+      "Repetition": 0.2115,
+      "Block": 0.0689,
+      "Interjection": 0.4897,
+      "Fluent": 0.1939
+    }
+  },
+  "test3.wav": {
+    "duration_seconds": 21.29,
+    "total_words": 10,
+    "unique_words": 9,
+    "candidate_fillers": 1,
+    "adjacent_repetitions": 1,
+    "pause_count": 3,
+    "total_pause_seconds": 2.26,
+    "recording_wpm": 28.18,
+    "active_speech_wpm": 37.55,
+    "active_speech_wpm_reliable": true,
+    "transcript_quality": {
+      "contains_non_latin_characters": false,
+      "non_latin_character_count": 0,
+      "word_metrics_reliable": true,
+      "warnings": []
+    },
+    "long_pause_count": 2,
+    "wavlm_candidate_region_count": 5,
+    "user_validation_context": {
+      "description": "User intentionally demonstrated these patterns",
+      "patterns": [
+        "Repetition",
+        "Repeated initial sounds",
+        "Long pauses"
+      ]
+    },
+    "wavlm_predictions": {
+      "Interjection": 6,
+      "Repetition": 11,
+      "Prolongation": 2,
+      "Fluent": 2
+    },
+    "wavlm_average_probabilities": {
+      "Prolongation": 0.2423,
+      "Repetition": 0.3507,
+      "Block": 0.0912,
+      "Interjection": 0.2116,
+      "Fluent": 0.1043
+    }
+  }
+}

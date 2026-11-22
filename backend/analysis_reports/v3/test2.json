@@ -1,0 +1,385 @@
+{
+  "filename": "test2.wav",
+  "duration_seconds": 17.09,
+  "transcript": "Hey, please can I get one hot cappuccino with a drizzle of caramel on top as well as foam on top as well as make it large? Do you have medium or do you have small? What are the available sizes that you have for it?",
+  "transcript_segments": [
+    {
+      "start": 0.0,
+      "end": 10.6,
+      "text": "Hey, please can I get one hot cappuccino with a drizzle of caramel on top as well as foam on top as well as make it large?"
+    },
+    {
+      "start": 10.6,
+      "end": 17.0,
+      "text": "Do you have medium or do you have small? What are the available sizes that you have for it?"
+    }
+  ],
+  "transcript_quality": {
+    "contains_non_latin_characters": false,
+    "non_latin_character_count": 0,
+    "word_metrics_reliable": true,
+    "warnings": []
+  },
+  "user_validation_context": {
+    "description": "User-described normal speech",
+    "patterns": []
+  },
+  "repeated_initial_sound_detection": {
+    "status": "not_supported_by_current_wavlm_model",
+    "note": "The current model has no dedicated repeated-initial-sound class. User annotations are kept separate from predictions."
+  },
+  "text_analysis": {
+    "total_words": 46,
+    "unique_words": 34,
+    "unique_word_list": [
+      "a",
+      "are",
+      "as",
+      "available",
+      "can",
+      "cappuccino",
+      "caramel",
+      "do",
+      "drizzle",
+      "foam",
+      "for",
+      "get",
+      "have",
+      "hey",
+      "hot",
+      "i",
+      "it",
+      "large",
+      "make",
+      "medium",
+      "of",
+      "on",
+      "one",
+      "or",
+      "please",
+      "sizes",
+      "small",
+      "that",
+      "the",
+      "top",
+      "well",
+      "what",
+      "with",
+      "you"
+    ],
+    "vocabulary_diversity": 0.739,
+    "top_words": {
+      "as": 4,
+      "you": 3,
+      "have": 3,
+      "on": 2,
+      "top": 2,
+      "well": 2,
+      "it": 2,
+      "do": 2,
+      "hey": 1,
+      "please": 1
+    },
+    "repeated_vocabulary": {
+      "as": 4,
+      "you": 3,
+      "have": 3,
+      "on": 2,
+      "top": 2,
+      "well": 2,
+      "it": 2,
+      "do": 2
+    },
+    "adjacent_repeated_words": [],
+    "filler_counts": {
+      "well": 2
+    },
+    "total_candidate_fillers": 2,
+    "recording_wpm": 161.51
+  },
+  "pause_analysis": {
+    "speech_active_seconds": 13.92,
+    "pause_count": 4,
+    "pauses": [
+      {
+        "start": 3.6,
+        "end": 4.02,
+        "duration": 0.42
+      },
+      {
+        "start": 5.82,
+        "end": 6.26,
+        "duration": 0.44
+      },
+      {
+        "start": 9.16,
+        "end": 9.64,
+        "duration": 0.48
+      },
+      {
+        "start": 10.44,
+        "end": 10.88,
+        "duration": 0.44
+      }
+    ],
+    "long_pause_count": 0,
+    "long_pauses": [],
+    "total_pause_seconds": 1.78,
+    "leading_silence_seconds": 0.28,
+    "trailing_silence_seconds": 0.52,
+    "energy_threshold": 0.05737
+  },
+  "active_speech_wpm": 198.28,
+  "active_speech_wpm_reliable": true,
+  "stuttering_analysis": {
+    "window_count": 17,
+    "window_predictions": [
+      {
+        "start": 0.0,
+        "end": 3.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0121,
+          "Repetition": 0.1782,
+          "Block": 0.0602,
+          "Interjection": 0.6671,
+          "Fluent": 0.0824
+        }
+      },
+      {
+        "start": 1.0,
+        "end": 4.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0135,
+          "Repetition": 0.1939,
+          "Block": 0.073,
+          "Interjection": 0.6446,
+          "Fluent": 0.0751
+        }
+      },
+      {
+        "start": 2.0,
+        "end": 5.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0126,
+          "Repetition": 0.0953,
+          "Block": 0.078,
+          "Interjection": 0.7514,
+          "Fluent": 0.0627
+        }
+      },
+      {
+        "start": 3.0,
+        "end": 6.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0167,
+          "Repetition": 0.1524,
+          "Block": 0.1272,
+          "Interjection": 0.4125,
+          "Fluent": 0.2912
+        }
+      },
+      {
+        "start": 4.0,
+        "end": 7.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.0215,
+          "Repetition": 0.3185,
+          "Block": 0.1297,
+          "Interjection": 0.2315,
+          "Fluent": 0.2989
+        }
+      },
+      {
+        "start": 5.0,
+        "end": 8.0,
+        "prediction": "Repetition",
+        "probabilities": {
+          "Prolongation": 0.0195,
+          "Repetition": 0.3659,
+          "Block": 0.1486,
+          "Interjection": 0.3621,
+          "Fluent": 0.1039
+        }
+      },
+      {
+        "start": 6.0,
+        "end": 9.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0199,
+          "Repetition": 0.2684,
+          "Block": 0.1077,
+          "Interjection": 0.5056,
+          "Fluent": 0.0985
+        }
+      },
+      {
+        "start": 7.0,
+        "end": 10.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0152,
+          "Repetition": 0.4159,
+          "Block": 0.0543,
+          "Interjection": 0.4742,
+          "Fluent": 0.0404
+        }
+      },
+      {
+        "start": 8.0,
+        "end": 11.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0958,
+          "Repetition": 0.2437,
+          "Block": 0.0475,
+          "Interjection": 0.4632,
+          "Fluent": 0.1498
+        }
+      },
+      {
+        "start": 9.0,
+        "end": 12.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.102,
+          "Repetition": 0.119,
+          "Block": 0.0558,
+          "Interjection": 0.6942,
+          "Fluent": 0.029
+        }
+      },
+      {
+        "start": 10.0,
+        "end": 13.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.1423,
+          "Repetition": 0.0743,
+          "Block": 0.0545,
+          "Interjection": 0.6936,
+          "Fluent": 0.0353
+        }
+      },
+      {
+        "start": 11.0,
+        "end": 14.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0369,
+          "Repetition": 0.0542,
+          "Block": 0.0178,
+          "Interjection": 0.8612,
+          "Fluent": 0.0299
+        }
+      },
+      {
+        "start": 12.0,
+        "end": 15.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0083,
+          "Repetition": 0.189,
+          "Block": 0.0077,
+          "Interjection": 0.7746,
+          "Fluent": 0.0204
+        }
+      },
+      {
+        "start": 13.0,
+        "end": 16.0,
+        "prediction": "Interjection",
+        "probabilities": {
+          "Prolongation": 0.0097,
+          "Repetition": 0.4616,
+          "Block": 0.017,
+          "Interjection": 0.4745,
+          "Fluent": 0.0373
+        }
+      },
+      {
+        "start": 14.0,
+        "end": 17.0,
+        "prediction": "Fluent",
+        "probabilities": {
+          "Prolongation": 0.019,
+          "Repetition": 0.3357,
+          "Block": 0.0335,
+          "Interjection": 0.2609,
+          "Fluent": 0.3509
+        }
+      },
+      {
+        "start": 15.0,
+        "end": 17.09,
+        "prediction": "Fluent",
+        "probabilities": {
+          "Prolongation": 0.0128,
+          "Repetition": 0.1146,
+          "Block": 0.1045,
+          "Interjection": 0.0426,
+          "Fluent": 0.7255
+        }
+      },
+      {
+        "start": 16.0,
+        "end": 17.09,
+        "prediction": "Fluent",
+        "probabilities": {
+          "Prolongation": 0.0544,
+          "Repetition": 0.0147,
+          "Block": 0.0544,
+          "Interjection": 0.0109,
+          "Fluent": 0.8656
+        }
+      }
+    ],
+    "prediction_counts": {
+      "Interjection": 12,
+      "Repetition": 2,
+      "Fluent": 3
+    },
+    "average_probabilities": {
+      "Prolongation": 0.036,
+      "Repetition": 0.2115,
+      "Block": 0.0689,
+      "Interjection": 0.4897,
+      "Fluent": 0.1939
+    },
+    "candidate_regions": [
+      {
+        "pattern": "Interjection",
+        "start": 0.0,
+        "end": 5.0,
+        "duration": 5.0,
+        "window_count": 3,
+        "mean_probability": 0.6877,
+        "max_probability": 0.7514
+      },
+      {
+        "pattern": "Interjection",
+        "start": 6.0,
+        "end": 15.0,
+        "duration": 9.0,
+        "window_count": 5,
+        "mean_probability": 0.7058,
+        "max_probability": 0.8612
+      },
+      {
+        "pattern": "Repetition",
+        "start": 13.0,
+        "end": 16.0,
+        "duration": 3.0,
+        "window_count": 1,
+        "mean_probability": 0.4616,
+        "max_probability": 0.4616
+      }
+    ],
+    "region_method": "Consecutive overlapping windows grouped by class probability; regions are candidate acoustic patterns, not confirmed events."
+  }
+}

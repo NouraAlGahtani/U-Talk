@@ -1,0 +1,49 @@
+{
+  "test2.wav": {
+    "duration_seconds": 17.09,
+    "total_words": 46,
+    "unique_words": 34,
+    "candidate_fillers": 2,
+    "adjacent_repetitions": 0,
+    "pause_count": 5,
+    "total_pause_seconds": 2.3,
+    "recording_wpm": 161.51,
+    "active_speech_wpm": 198.28,
+    "wavlm_predictions": {
+      "Interjection": 12,
+      "Repetition": 2,
+      "Fluent": 3
+    },
+    "wavlm_average_probabilities": {
+      "Prolongation": 0.036,
+      "Repetition": 0.2115,
+      "Block": 0.0689,
+      "Interjection": 0.4897,
+      "Fluent": 0.1939
+    }
+  },
+  "test3.wav": {
+    "duration_seconds": 21.29,
+    "total_words": 9,
+    "unique_words": 9,
+    "candidate_fillers": 0,
+    "adjacent_repetitions": 0,
+    "pause_count": 5,
+    "total_pause_seconds": 3.8,
+    "recording_wpm": 25.36,
+    "active_speech_wpm": 33.79,
+    "wavlm_predictions": {
+      "Interjection": 6,
+      "Repetition": 11,
+      "Prolongation": 2,
+      "Fluent": 2
+    },
+    "wavlm_average_probabilities": {
+      "Prolongation": 0.2423,
+      "Repetition": 0.3507,
+      "Block": 0.0912,
+      "Interjection": 0.2116,
+      "Fluent": 0.1043
+    }
+  }
+}
