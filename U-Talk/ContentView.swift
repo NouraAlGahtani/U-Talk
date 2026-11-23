@@ -22,6 +22,8 @@ struct ContentView: View {
     @State private var selectedHelpers: Set<String> = []
     @State private var selectedFeedback: String = ""
     @AppStorage("selectedScenario") private var selectedScenario: String = ""
+    /// Set when onboarding is finished; later launches go straight from the splash to Home.
+    @AppStorage("utalk.onboardingComplete") private var onboardingComplete = false
 
     var body: some View {
         ZStack {
@@ -31,7 +33,7 @@ struct ContentView: View {
                 switch route {
                 case .splash:
                     SplashView {
-                        navigate(to: .welcome)
+                        navigate(to: onboardingComplete ? .home : .welcome)
                     }
                 case .welcome:
                     WelcomeView {
@@ -64,7 +66,12 @@ struct ContentView: View {
                 case .microphone:
                     MicrophonePermissionView(
                         onBack: { navigate(to: .feedback) },
-                        onAllow: { navigate(to: .notifications) },
+                        onAllow: {
+                            Task {
+                                await PracticePermissions.requestMicrophoneAndSpeech()
+                                navigate(to: .notifications)
+                            }
+                        },
                         onSkip: { navigate(to: .notifications) }
                     )
                 case .notifications:
@@ -86,6 +93,7 @@ struct ContentView: View {
                             if let first = selectedSituations.sorted().first {
                                 selectedScenario = first
                             }
+                            onboardingComplete = true
                             navigate(to: .home)
                         }
                     )
@@ -95,6 +103,10 @@ struct ContentView: View {
             }
             .id(route)
             .transition(.opacity)
+        }
+        // "Start over" in Profile → Account clears everything; go back to the welcome screen.
+        .onChange(of: onboardingComplete) { _, done in
+            if !done && route == .home { navigate(to: .welcome) }
         }
     }
 

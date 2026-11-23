@@ -203,7 +203,8 @@ struct AllSessionsView: View {
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(forest)
                 .frame(width: 52, height: 52)
-                .background(session.mode == .conversation ? forest.opacity(0.12) : paleLime, in: RoundedRectangle(cornerRadius: 16))
+                .background(session.mode == .conversation ? Color(red: 183/255, green: 209/255, blue: 251/255) : paleLime,
+                            in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 4) {
                 Text(session.title)
                     .font(.system(size: 20, weight: .bold, design: .serif))

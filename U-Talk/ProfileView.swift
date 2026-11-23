@@ -1,16 +1,8 @@
 import SwiftUI
 
-// Profile tab (designed by Maysam). Integrated into MainTabView as the third tab.
-// Changes from the original file: no separate @main app; uses the shared NavigationStack and bottom bar
-// from MainTabView; name and progress come from the onboarding/home data; settings are saved.
-
-// MARK: - Navigation Routes
-
-private enum ProfileRoute: Hashable {
-    case account
-    case settings
-    case help
-}
+// Profile (designed by Maysam). Opened from the profile button at the top of Home.
+// Changes from the original file: no separate @main app; uses Home's NavigationStack; no bottom bar;
+// name and progress come from the onboarding/home data; settings are saved.
 
 // MARK: - 1. Profile Menu View
 
@@ -24,6 +16,7 @@ struct ProfileMenuView: View {
     @AppStorage("userName") private var name: String = ""
     @AppStorage("userAge") private var age: String = ""
     @AppStorage("currentPracticeDay") private var currentDay: Int = 1
+    @Environment(\.dismiss) private var dismiss
 
     private var displayName: String {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -54,6 +47,24 @@ struct ProfileMenuView: View {
                         )
 
                     VStack(spacing: 0) {
+                        HStack {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 17.5, weight: .semibold))
+                                    .foregroundColor(darkGreen)
+                                    .frame(width: 40, height: 40)
+                                    .background(.white)
+                                    .clipShape(Circle())
+                                    .shadow(color: darkGreen.opacity(0.08), radius: 7, x: 0, y: 3)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Back")
+                            Spacer()
+                        }
+                        .padding(.top, 8)
+
                         HStack(spacing: 15) {
                             SealShape()
                                 .fill(badgeBlue)
@@ -80,10 +91,13 @@ struct ProfileMenuView: View {
 
                             Spacer(minLength: 0)
                         }
-                        .padding(.top, 56)
+                        .padding(.top, 8)
 
                         VStack(spacing: 16) {
-                            NavigationLink(value: ProfileRoute.account) {
+                            NavigationLink {
+                                AccountDetailView(name: $name, age: $age)
+                                    .toolbar(.hidden, for: .navigationBar)
+                            } label: {
                                 menuCardContent(
                                     icon: "person",
                                     title: "Account",
@@ -93,7 +107,10 @@ struct ProfileMenuView: View {
                             }
                             .buttonStyle(.plain)
 
-                            NavigationLink(value: ProfileRoute.settings) {
+                            NavigationLink {
+                                SettingsDetailView()
+                                    .toolbar(.hidden, for: .navigationBar)
+                            } label: {
                                 menuCardContent(
                                     icon: "slider.horizontal.3",
                                     title: "Settings",
@@ -103,7 +120,10 @@ struct ProfileMenuView: View {
                             }
                             .buttonStyle(.plain)
 
-                            NavigationLink(value: ProfileRoute.help) {
+                            NavigationLink {
+                                HelpSupportView()
+                                    .toolbar(.hidden, for: .navigationBar)
+                            } label: {
                                 menuCardContent(
                                     icon: "questionmark.circle",
                                     title: "Help & Support",
@@ -119,22 +139,6 @@ struct ProfileMenuView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 20)
-                }
-            }
-            .navigationDestination(for: ProfileRoute.self) { route in
-                switch route {
-                case .account:
-                    AccountDetailView(name: $name, age: $age)
-                        .toolbar(.hidden, for: .navigationBar)
-                        .modifier(HidesUTalkTabBar())
-                case .settings:
-                    SettingsDetailView()
-                        .toolbar(.hidden, for: .navigationBar)
-                        .modifier(HidesUTalkTabBar())
-                case .help:
-                    HelpSupportView()
-                        .toolbar(.hidden, for: .navigationBar)
-                        .modifier(HidesUTalkTabBar())
                 }
             }
         }
@@ -372,7 +376,10 @@ struct AccountDetailView: View {
                 .frame(maxWidth: .infinity)
                 .lineSpacing(4)
 
-                Button(action: {}) {
+                Button(action: {
+                    // Back to the start screen (ContentView watches this key). History is kept.
+                    UserDefaults.standard.set(false, forKey: "utalk.onboardingComplete")
+                }) {
                     HStack(spacing: 12) {
                         Text("Sign out")
                             .font(.system(size: 16, weight: .bold))
@@ -578,7 +585,19 @@ struct SettingsDetailView: View {
                             .buttonStyle(.plain)
                         }
                     }
+
+                    // Pick the exact time for each selected reminder.
+                    ReminderTimeRows(slots: ReminderSlot.allCases.filter { selectedTimes.contains($0.rawValue) },
+                                     tint: darkGreen)
+
+                    NotificationsOffNote(tint: darkGreen)
                 }
+            }
+            .onChange(of: dailyReminder) { _, _ in
+                Task { await PracticeReminders.requestAndSchedule() }
+            }
+            .onChange(of: reminderTimesRaw) { _, _ in
+                Task { await PracticeReminders.requestAndSchedule() }
             }
             .padding(16)
             .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(.white.opacity(0.95)))

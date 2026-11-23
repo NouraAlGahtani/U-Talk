@@ -60,15 +60,7 @@ struct HomeView: View {
                             VStack(spacing: 0) {
                                 HStack {
                                     Spacer()
-                                    NavigationLink {
-                                        Text("Profile Page")
-                                    } label: {
-                                        Text(initialLetter)
-                                            .font(.system(size: 22, weight: .bold, design: .serif))
-                                            .foregroundStyle(forestGreen)
-                                            .frame(width: 48, height: 48)
-                                            .background(.white, in: Circle())
-                                    }
+                                    ProfileAvatarLink(initial: initialLetter)
                                 }
                                 .padding(.top, 12)
                                 
@@ -113,6 +105,7 @@ struct HomeView: View {
                                     
                                     NavigationLink {
                                         PracticeSelectionView(day: currentDay, scenario: currentLesson.title)
+                                            .modifier(HidesUTalkTabBar())
                                     } label: {
                                         HStack(spacing: 10) {
                                             Text("Practice today")
@@ -184,9 +177,7 @@ struct HomeView: View {
                                                 .frame(width: 30, height: 30)
                                             
                                             if dayIndex < completedSessionsCount {
-                                                Image(systemName: "flame.fill")
-                                                    .font(.system(size: 17))
-                                                    .foregroundStyle(.orange)
+                                                StreakFlame(index: dayIndex)
                                             } else if dayIndex == completedSessionsCount {
                                                 Circle()
                                                     .strokeBorder(
@@ -210,6 +201,7 @@ struct HomeView: View {
                         // ── Challenge Mode button ──────────────────────
                         NavigationLink {
                             ChallengeView()
+                                .modifier(HidesUTalkTabBar())
                         } label: {
                             HStack(spacing: 16) {
                                 AnimatedUMascot(style: .blaze)
@@ -240,6 +232,7 @@ struct HomeView: View {
 
                         NavigationLink {
                             AllSessionsView()
+                                .modifier(HidesUTalkTabBar())
                         } label: {
                             practiceHistoryCard
                         }
@@ -591,7 +584,16 @@ private enum UMFX {
                           _ cx: CGFloat, _ cy: CGFloat, _ s: CGFloat,
                           body: Color, face: Color, band: Color) {
         var g = ctx
-        g.translateBy(x: 0, y: CGFloat(sin(t * 2 * Double.pi / 2.0)) * s * 0.013)
+        // Livelier than before (the old bob was under 1 pt at Challenge's size, so U looked still):
+        // a gentle float, a side-to-side sway, and a small hop every 3 seconds.
+        let float = sin(t * 2 * Double.pi / 2.0) * 0.045
+        let hopPhase = t.truncatingRemainder(dividingBy: 3.0)
+        let hop = hopPhase < 0.45 ? sin(hopPhase / 0.45 * Double.pi) * 0.10 : 0
+        g.translateBy(x: 0, y: CGFloat(float - hop) * s)
+        let sway = sin(t * 2 * Double.pi / 2.6) * 0.07
+        g.translateBy(x: cx, y: cy + s * 0.45)
+        g.rotate(by: .radians(sway))
+        g.translateBy(x: -cx, y: -(cy + s * 0.45))
         g.fill(bodyPath(cx, cy, s), with: .color(body))
 
         // eyes narrow on a slow cycle, which reads as conspiratorial
@@ -608,14 +610,16 @@ private enum UMFX {
         let anchor = cy + s * 0.414
         var m = g
         m.translateBy(x: cx, y: anchor)
-        m.rotate(by: .radians(sin(t * 2 * Double.pi / 1.7) * 0.030))
+        m.rotate(by: .radians(sin(t * 2 * Double.pi / 1.7) * 0.09))
         m.translateBy(x: -cx, y: -anchor)
         m.fill(mustachePath(cx, anchor, s), with: .color(face))
 
         // fedora last, so it sits in front of the U rather than behind it
         var hat = g
         hat.translateBy(x: cx, y: cy - s * 0.56)
-        hat.rotate(by: .radians(-0.13))
+        // hat lifts a little at the top of each hop, like a tip of the hat
+        hat.translateBy(x: 0, y: -CGFloat(hop) * s * 0.6)
+        hat.rotate(by: .radians(-0.13 - hop * 0.8))
         var crown = Path()
         crown.move(to: CGPoint(x: -s * 0.23, y: -s * 0.040))
         crown.addLine(to: CGPoint(x: -s * 0.17, y: -s * 0.236))
@@ -674,5 +678,33 @@ struct AnimatedUMascot: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+
+/// Streak flame that flickers: it stretches, leans and glows on a loop.
+/// `index` offsets each day's flame so they don't all move in sync.
+struct StreakFlame: View {
+    var index: Int = 0
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate + Double(index) * 0.37
+            let stretch = 1 + 0.10 * sin(t * 7.3) + 0.05 * sin(t * 13.1)
+            let lean = 5 * sin(t * 4.1) + 2 * sin(t * 9.7)
+            let glow = 0.75 + 0.25 * sin(t * 5.3)
+
+            Image(systemName: "flame.fill")
+                .font(.system(size: 17))
+                .foregroundStyle(
+                    LinearGradient(colors: [Color(red: 1, green: 0.85, blue: 0.25), .orange,
+                                            Color(red: 0.93, green: 0.35, blue: 0.12)],
+                                   startPoint: .top, endPoint: .bottom)
+                )
+                .scaleEffect(x: 2 - stretch, y: stretch, anchor: .bottom)
+                .rotationEffect(.degrees(lean), anchor: .bottom)
+                .shadow(color: .orange.opacity(0.45 * glow), radius: 4 * glow)
+        }
+        .accessibilityLabel("Streak day")
     }
 }

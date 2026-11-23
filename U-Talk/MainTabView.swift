@@ -1,10 +1,15 @@
 import SwiftUI
 import Combine
 
-/// Lets a pushed screen hide the custom bottom bar. The bar is a safeAreaInset
-/// on the TabView, so `.toolbar(.hidden, for: .tabBar)` has no effect on it.
+/// Kept so existing screens (ChallengeView, HidesUTalkTabBar) still compile. The bar no longer reads it:
+/// it now lives on the Home/Roadmap root pages only (see `uTalkTabBar`).
 final class TabBarVisibility: ObservableObject {
-    @Published var hidden = false
+    @Published private var hideCount = 0
+
+    var hidden: Bool {
+        get { hideCount > 0 }
+        set { hideCount = newValue ? hideCount + 1 : max(0, hideCount - 1) }
+    }
 }
 
 private struct TabBarVisibilityKey: EnvironmentKey {
@@ -21,7 +26,6 @@ extension EnvironmentValues {
 enum UTalkTab: Hashable {
     case home
     case roadmap
-    case profile
 }
 
 struct MainTabView: View {
@@ -33,6 +37,7 @@ struct MainTabView: View {
             Tab("Home", systemImage: "house", value: UTalkTab.home) {
                 NavigationStack {
                     HomeView()
+                        .uTalkTabBar($selectedTab)
                 }
                 #if !os(macOS)
                 .toolbarVisibility(.hidden, for: .tabBar)
@@ -43,16 +48,7 @@ struct MainTabView: View {
             Tab("Roadmap", systemImage: "point.topleft.down.to.point.bottomright.curvepath", value: UTalkTab.roadmap) {
                 NavigationStack {
                     RoadmapView()
-                }
-                #if !os(macOS)
-                .toolbarVisibility(.hidden, for: .tabBar)
-                #endif
-            }
-            .defaultVisibility(.hidden, for: .tabBar)
-
-            Tab("Profile", systemImage: "person", value: UTalkTab.profile) {
-                NavigationStack {
-                    ProfileMenuView()
+                        .uTalkTabBar($selectedTab)
                 }
                 #if !os(macOS)
                 .toolbarVisibility(.hidden, for: .tabBar)
@@ -62,16 +58,22 @@ struct MainTabView: View {
         }
         .tabViewStyle(.tabBarOnly)
         .environment(\.tabBarVisibility, tabBar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !tabBar.hidden {
-                UTalkTabBar(selection: $selectedTab)
-                    .frame(maxWidth: .infinity)
-                    // sits a little lower, into the space above the home indicator
-                    .padding(.bottom, -10)
-                    .background {
-                        Color.white.ignoresSafeArea(edges: .bottom)
-                    }
-            }
+    }
+}
+
+extension View {
+    /// The custom bottom bar is attached to the first page of each tab (Home, Roadmap) inside its
+    /// NavigationStack. Pages opened from there cover it, so they show only their back button,
+    /// and nothing has to show/hide the bar while a page is being pushed (that caused a glitch).
+    func uTalkTabBar(_ selection: Binding<UTalkTab>) -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            UTalkTabBar(selection: selection)
+                .frame(maxWidth: .infinity)
+                // sits a little lower, into the space above the home indicator
+                .padding(.bottom, -10)
+                .background {
+                    Color.white.ignoresSafeArea(edges: .bottom)
+                }
         }
     }
 }
@@ -84,7 +86,6 @@ struct UTalkTabBar: View {
         HStack(spacing: 0) {
             tabButton("Home", icon: "house", tab: .home)
             tabButton("Roadmap", icon: "point.topleft.down.to.point.bottomright.curvepath", tab: .roadmap)
-            tabButton("Profile", icon: "person", tab: .profile)
         }
         .animation(.easeInOut(duration: 0.25), value: selection)
     }

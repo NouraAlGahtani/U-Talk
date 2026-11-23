@@ -118,6 +118,8 @@ struct PracticeFeedbackView: View {
                 TextField("What went well? What was hard?", text: $note, axis: .vertical)
                     .lineLimit(2...5)
                     .font(.system(size: 14))
+                    .foregroundStyle(UTalk.ink)
+                    .tint(UTalk.forest)
                     .focused($noteFocused)
                     .padding(14)
                     .frame(minHeight: 56, alignment: .topLeading)
@@ -137,7 +139,16 @@ struct PracticeFeedbackView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .utalkCyanBlob(size: 300, offset: CGSize(width: -170, height: -40))
-        .background(Color.white.ignoresSafeArea())
+        // The header's blue fills the status-bar area too (it used to leave a white strip there).
+        .background {
+            VStack(spacing: 0) {
+                UTalk.periwinkle
+                    .frame(height: 0)
+                    .ignoresSafeArea(edges: .top)
+                Color.white
+            }
+            .ignoresSafeArea(edges: .bottom)
+        }
         .environment(\.layoutDirection, .leftToRight)
     }
 
@@ -166,7 +177,8 @@ struct PracticeFeedbackView: View {
         .padding(.top, 14)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(UTalk.periwinkle.ignoresSafeArea(edges: .top))
+        // extends upwards so pulling the page down never shows white above the header
+        .background(UTalk.periwinkle.padding(.top, -600))
     }
 
     private var metricsCard: some View {

@@ -7,8 +7,14 @@ struct NotificationsView: View {
     var onBack: (() -> Void)? = nil
     var onContinue: () -> Void
     
-    @State private var reminderEnabled = true
-    @State private var selectedTime = "Morning"
+    // Saved, shared with Profile → Settings (see PracticeReminders.swift)
+    @AppStorage(PracticeReminders.enabledKey) private var reminderEnabled = true
+    @AppStorage(PracticeReminders.slotsKey) private var selectedTimesRaw = "Morning"
+
+    private var selectedSlots: [ReminderSlot] {
+        let names = Set(selectedTimesRaw.split(separator: ",").map(String.init))
+        return ReminderSlot.allCases.filter { names.contains($0.rawValue) }
+    }
     
     let forestGreen = Color(red: 39/255, green: 79/255, blue: 72/255)
     let paleLime = Color(red: 237/255, green: 252/255, blue: 214/255)
@@ -105,25 +111,38 @@ struct NotificationsView: View {
                     }
                     .padding(.top, 18)
                     
-                    Text("REMIND ME IN THE")
-                        .font(.system(size: 10, weight: .bold))
-                        .tracking(1)
-                        .foregroundStyle(forestGreen)
-                        .padding(.top, 25)
-                    
-                    HStack(spacing: 8) {
-                        timeButton("Morning", time: "8:00")
-                        timeButton("Afternoon", time: "13:00")
+                    if reminderEnabled {
+                        Text("REMIND ME IN THE")
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(1)
+                            .foregroundStyle(forestGreen)
+                            .padding(.top, 25)
+                        
+                        HStack(spacing: 8) {
+                            timeButton(.morning)
+                            timeButton(.afternoon)
+                            timeButton(.evening)
+                        }
+                        .padding(.top, 10)
+                        
+                        if !selectedSlots.isEmpty {
+                            Text("Tap a time to change it")
+                                .font(.system(size: 11))
+                                .foregroundStyle(forestGreen.opacity(0.7))
+                                .padding(.top, 14)
+                            ReminderTimeRows(slots: selectedSlots, tint: forestGreen)
+                                .padding(.top, 6)
+                        }
                     }
-                    .padding(.top, 10)
-                    
-                    timeButton("Evening", time: "19:00")
-                        .padding(.top, 8)
                     
                     Spacer()
                     
                     Button {
-                        onContinue()
+                        Task {
+                            // Shows the iOS notification prompt (only if reminders are on), then schedules them.
+                            await PracticeReminders.requestAndSchedule()
+                            onContinue()
+                        }
                     } label: {
                         HStack(spacing: 8) {
                             Text("Continue")
@@ -144,17 +163,21 @@ struct NotificationsView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
     
-    func timeButton(_ title: String, time: String) -> some View {
-        Button {
-            selectedTime = title
+    /// Several times can be picked.
+    func timeButton(_ slot: ReminderSlot) -> some View {
+        let active = selectedSlots.contains(slot)
+        return Button {
+            var names = Set(selectedSlots.map(\.rawValue))
+            if active { names.remove(slot.rawValue) } else { names.insert(slot.rawValue) }
+            selectedTimesRaw = ReminderSlot.allCases.map(\.rawValue).filter { names.contains($0) }.joined(separator: ",")
         } label: {
-            Text("\(title) · \(time)")
+            Text(slot.rawValue)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(selectedTime == title ? .white : forestGreen)
+                .foregroundStyle(active ? .white : forestGreen)
                 .padding(.horizontal, 14)
                 .frame(height: 36)
                 .background(
-                    selectedTime == title ? forestGreen : .white,
+                    active ? forestGreen : .white,
                     in: Capsule()
                 )
                 .overlay {

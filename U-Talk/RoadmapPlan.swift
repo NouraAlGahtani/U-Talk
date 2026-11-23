@@ -117,5 +117,8 @@ enum OnboardingAnswers {
         case "Both": defaults.set("Both", forKey: "utalk.feedbackStyle")
         default: break
         }
+
+        // Reminders were scheduled on the notifications step; update their text for the new roadmap.
+        Task { await PracticeReminders.reschedule() }
     }
 }

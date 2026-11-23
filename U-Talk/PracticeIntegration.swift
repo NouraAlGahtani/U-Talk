@@ -44,15 +44,32 @@ struct LessonPracticeDestination: View {
     }
 }
 
-/// Hides the custom bottom bar from MainTabView while a practice screen is open (same approach as ChallengeView).
-struct HidesUTalkTabBar: ViewModifier {
-    @Environment(\.tabBarVisibility) private var tabBar
+/// Profile button at the top right of Home and Roadmap. One shared view so both are identical
+/// (same size, shadow and position); place it as the last item of the header HStack, top-aligned.
+struct ProfileAvatarLink: View {
+    let initial: String
+    private let forest = Color(red: 39/255, green: 79/255, blue: 72/255)
 
-    func body(content: Content) -> some View {
-        content
-            .onAppear { tabBar.hidden = true }
-            .onDisappear { tabBar.hidden = false }
+    var body: some View {
+        NavigationLink {
+            ProfileMenuView()
+        } label: {
+            Text(initial)
+                .font(.system(size: 22, weight: .bold, design: .serif))
+                .foregroundStyle(forest)
+                .frame(width: 48, height: 48)
+                .background(.white, in: Circle())
+                .shadow(color: .black.opacity(0.10), radius: 9, y: 3)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Profile")
     }
+}
+
+/// No longer needed: pushed pages never show the bar now (it lives on the Home/Roadmap root pages).
+/// Kept as a no-op so the existing `.modifier(HidesUTalkTabBar())` calls still compile.
+struct HidesUTalkTabBar: ViewModifier {
+    func body(content: Content) -> some View { content }
 }
 
 /// Shown for lessons that don't have a practice scenario yet.

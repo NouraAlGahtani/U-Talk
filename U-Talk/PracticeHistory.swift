@@ -204,5 +204,6 @@ enum PracticeProgress {
         guard day == completed + 1, day <= totalDays else { return }
         defaults.set(day, forKey: completedDaysKey)
         defaults.set(min(day + 1, totalDays), forKey: currentDayKey)
+        Task { await PracticeReminders.reschedule() }   // reminder text names the next lesson
     }
 }

@@ -24,3 +24,4 @@ U-Talk/U_TALK_WavLM.mlpackage/
 backend/datasets/sep28k/
 *.bak-*
 !U-Talk/Assets.xcassets/**/*.wav
+!U-Talk/utalk_reminder.wav

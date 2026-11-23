@@ -42,19 +42,7 @@ struct RoadmapView: View {
 
                             Spacer()
 
-                            NavigationLink {
-                                Text("Profile Page")
-                            } label: {
-                                Text(initialLetter)
-                                    .font(.system(size: 22, weight: .bold, design: .serif))
-                                    .foregroundStyle(forestGreen)
-                                    .frame(width: 48, height: 48)
-                                    // white on pale lime has almost no edge, so it
-                                    // needs a lift to read as a tappable avatar
-                                    .background(.white, in: Circle())
-                                    .shadow(color: .black.opacity(0.10), radius: 9, y: 3)
-                            }
-                            .padding(.top, 2)
+                            ProfileAvatarLink(initial: initialLetter)
                         }
                         .padding(.horizontal, 24)
                         .padding(.top, 12)
@@ -199,6 +187,7 @@ struct RoadmapView: View {
 
     private func practiceDestination(for day: Int) -> some View {
         PracticeSelectionView(day: day, scenario: RoadmapPlan.lesson(day: day, focus: focus).title)
+            .modifier(HidesUTalkTabBar())
     }
 
     private func completedDay(number: Int, title: String, x: CGFloat, y: CGFloat, side: LabelSide, width: CGFloat) -> some View {
