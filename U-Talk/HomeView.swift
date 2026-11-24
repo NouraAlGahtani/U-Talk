@@ -7,6 +7,7 @@ struct HomeView: View {
     @AppStorage("completedToday") private var completedToday: Bool = false
     @AppStorage("selectedScenario") private var selectedScenario: String = ""
     @AppStorage(RoadmapPlan.focusKey) private var roadmapFocus: String = ""
+    @AppStorage(PracticeProgress.completedDaysKey) private var completedRoadmapDays: Int = 0
     
     let forestGreen = Color(red: 39/255, green: 79/255, blue: 72/255)
     let paleLime = Color(red: 237/255, green: 252/255, blue: 214/255)
@@ -25,7 +26,7 @@ struct HomeView: View {
     }
     
     private var completedSessionsCount: Int {
-        max(0, currentDay - 1)
+        min(7, max(0, completedRoadmapDays))
     }
     
     /// Today's lesson from the roadmap plan (built from the onboarding answers), same as RoadmapView.
@@ -682,16 +683,15 @@ struct AnimatedUMascot: View {
 }
 
 
-/// Streak flame that flickers: it stretches, leans and glows on a loop.
-/// `index` offsets each day's flame so they don't all move in sync.
+/// Streak flame that flickers: it stretches up and down and glows on a loop.
+/// Every flame uses the same clock and no side-to-side lean, so they all move together, symmetrically.
 struct StreakFlame: View {
-    var index: Int = 0
+    var index: Int = 0   // kept for existing call sites; no longer changes the motion
 
     var body: some View {
         TimelineView(.animation) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate + Double(index) * 0.37
+            let t = timeline.date.timeIntervalSinceReferenceDate
             let stretch = 1 + 0.10 * sin(t * 7.3) + 0.05 * sin(t * 13.1)
-            let lean = 5 * sin(t * 4.1) + 2 * sin(t * 9.7)
             let glow = 0.75 + 0.25 * sin(t * 5.3)
 
             Image(systemName: "flame.fill")
@@ -702,7 +702,6 @@ struct StreakFlame: View {
                                    startPoint: .top, endPoint: .bottom)
                 )
                 .scaleEffect(x: 2 - stretch, y: stretch, anchor: .bottom)
-                .rotationEffect(.degrees(lean), anchor: .bottom)
                 .shadow(color: .orange.opacity(0.45 * glow), radius: 4 * glow)
         }
         .accessibilityLabel("Streak day")

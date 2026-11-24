@@ -9,6 +9,24 @@ import Combine
 final class PracticeVoice: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
+    /// True while the AI's voice is playing (drives the mascot's talking mouth).
+    @Published private(set) var isSpeaking = false
+    private var speakingWatch: Task<Void, Never>?
+
+    /// Polls the player / synthesizer until the voice ends.
+    private func watchSpeaking() {
+        isSpeaking = true
+        speakingWatch?.cancel()
+        speakingWatch = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            while !Task.isCancelled {
+                guard let self else { return }
+                let busy = (self.player?.isPlaying ?? false) || self.synthesizer.isSpeaking
+                if !busy { self.isSpeaking = false; return }
+                try? await Task.sleep(for: .milliseconds(150))
+            }
+        }
+    }
 
     func play(_ data: Data) throws {
         stop()
@@ -19,6 +37,7 @@ final class PracticeVoice: ObservableObject {
             throw NSError(domain: "UTalkAudio", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "Audio playback could not start."])
         }
+        watchSpeaking()
     }
 
     /// On-device text-to-speech fallback.
@@ -29,9 +48,12 @@ final class PracticeVoice: ObservableObject {
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = rate
         synthesizer.speak(utterance)
+        watchSpeaking()
     }
 
     func stop() {
+        speakingWatch?.cancel()
+        isSpeaking = false
         player?.stop()
         player = nil
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }

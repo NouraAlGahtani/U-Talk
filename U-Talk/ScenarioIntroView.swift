@@ -67,11 +67,14 @@ struct ScenarioIntroView: View {
         .background(Color.white.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .environment(\.layoutDirection, .leftToRight)
-        .fullScreenCover(isPresented: $showSession, onDismiss: {
-            if completed { dismiss() }
-        }) {
+        .fullScreenCover(isPresented: $showSession) {
             PracticeSessionContainer(scenario: scenario, kind: kind, day: day, userName: userName) { didComplete in
                 completed = didComplete
+                if didComplete {
+                    // Finished (saved the feedback): switch to the Roadmap *underneath* the feedback screen
+                    // before it closes, so it slides away straight onto the Roadmap (this intro isn't shown again).
+                    NotificationCenter.default.post(name: .uTalkPracticeFinished, object: nil)
+                }
                 showSession = false
             }
         }
@@ -106,11 +109,10 @@ struct ScenarioIllustration: View {
                 .padding(.top, 40)
                 .accessibilityHidden(true)
         } else {
-            Image(systemName: scenario.symbol)
-                .font(.system(size: 80, weight: .light))
-                .foregroundStyle(UTalk.forest)
-                .padding(.bottom, 36)
-                .accessibilityHidden(true)
+            // No illustration yet: show the U dressed for this scenario.
+            ScenarioMascot(scenarioID: scenario.id)
+                .frame(width: 200, height: 200)
+                .padding(.bottom, 10)
         }
     }
 }

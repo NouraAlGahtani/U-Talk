@@ -42,7 +42,7 @@ struct SituationsStepView: View {
                     .foregroundColor(.forestGreen)
                     .lineSpacing(-2)
 
-                Text("Choose up to three. Your roadmap starts with these.")
+                Text("Choose up to three. Your roadmap is built from these.")
                     .font(.system(size: 14))
                     .foregroundColor(.forestGreen.opacity(0.75))
                     .padding(.bottom, 12)

@@ -8,7 +8,9 @@ extension PracticeScenario {
     /// Returns nil for lessons that don't have a scenario yet.
     static func forLesson(_ title: String) -> PracticeScenario? {
         switch title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "introducing yourself", "first hello", "small talk", "daily conversation":
+        case "small talk":
+            return .smallTalk
+        case "introducing yourself", "first hello", "daily conversation":
             return .aboutYou
         case "at the restaurant", "coffee order":
             return .restaurant

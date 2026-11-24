@@ -10,6 +10,10 @@ struct ScriptPracticeView: View {
 
     @StateObject private var recorder = ScriptRecorder()
     @StateObject private var voice = PracticeVoice()
+    private let api = APIClient()
+    @State private var previewLoading = false
+    @State private var isOnScreen = true          // the preview must not start after leaving this screen
+    @State private var previewAudio: Data?          // Andrew's reading, kept so replaying is instant
     @State private var takes = 0
     @State private var startedAt = Date()
 
@@ -57,6 +61,7 @@ struct ScriptPracticeView: View {
             _ = try? await StutterClassifier.shared.loadIfNeeded()
         }
         .onDisappear {
+            isOnScreen = false
             recorder.stopAll()
             voice.stop()
         }
@@ -89,15 +94,33 @@ struct ScriptPracticeView: View {
         .background(UTalk.paleLime.ignoresSafeArea(edges: .top))
     }
 
+    /// Andrew (Azure voice from the backend) reads the script; tap again to stop.
+    /// Falls back to the iPhone's voice only if the backend can't be reached.
+    private func togglePreview() async {
+        if voice.isSpeaking { voice.stop(); return }
+        if previewAudio == nil {
+            previewLoading = true
+            previewAudio = try? await api.voiceAudio(text: scenario.scriptLines.joined(separator: " "),
+                                                    voice: nil,        // backend default: Andrew
+                                                    style: nil,        // plain, clear reading
+                                                    rate: "-8%")       // a little slower, easy to follow
+            previewLoading = false
+        }
+        guard !isRecording, isOnScreen, !Task.isCancelled else { return }
+        if let data = previewAudio, (try? voice.play(data)) != nil { return }
+        voice.speak(scenario.scriptLines.joined(separator: " "), rate: 0.44)
+    }
+
     private var scriptCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 SectionLabel(text: "Your script")
                 Spacer()
                 Button {
-                    voice.speak(scenario.scriptLines.joined(separator: " "), rate: 0.44)
+                    Task { await togglePreview() }
                 } label: {
-                    Label("Preview", systemImage: "eye")
+                    Label(previewLoading ? "Loading…" : (voice.isSpeaking ? "Stop" : "Preview"),
+                          systemImage: voice.isSpeaking ? "stop.fill" : "speaker.wave.2")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(UTalk.ink)
                         .padding(.horizontal, 12)
@@ -105,8 +128,8 @@ struct ScriptPracticeView: View {
                         .overlay(Capsule().stroke(UTalk.track))
                 }
                 .buttonStyle(.plain)
-                .disabled(isRecording)
-                .accessibilityHint("Listen to the script read aloud")
+                .disabled(isRecording || previewLoading)
+                .accessibilityHint("Listen to Andrew read the script aloud")
             }
 
             ForEach(scenario.scriptLines, id: \.self) { line in

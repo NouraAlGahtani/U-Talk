@@ -1,6 +1,12 @@
 import SwiftUI
 import Combine
 
+extension Notification.Name {
+    /// Posted when a practice session is finished and saved; MainTabView then shows the Roadmap.
+    static let uTalkPracticeFinished = Notification.Name("uTalkPracticeFinished")
+}
+import Combine
+
 /// Kept so existing screens (ChallengeView, HidesUTalkTabBar) still compile. The bar no longer reads it:
 /// it now lives on the Home/Roadmap root pages only (see `uTalkTabBar`).
 final class TabBarVisibility: ObservableObject {
@@ -30,6 +36,10 @@ enum UTalkTab: Hashable {
 
 struct MainTabView: View {
     @State private var selectedTab: UTalkTab = .home
+    @State private var homeStackID = UUID()
+    @State private var roadmapStackID = UUID()
+    @AppStorage(CelebrationView.pendingKey) private var celebrationPending = false
+    @State private var showCelebration = false
     @StateObject private var tabBar = TabBarVisibility()
 
     var body: some View {
@@ -39,6 +49,7 @@ struct MainTabView: View {
                     HomeView()
                         .uTalkTabBar($selectedTab)
                 }
+                .id(homeStackID)
                 #if !os(macOS)
                 .toolbarVisibility(.hidden, for: .tabBar)
                 #endif
@@ -50,6 +61,7 @@ struct MainTabView: View {
                     RoadmapView()
                         .uTalkTabBar($selectedTab)
                 }
+                .id(roadmapStackID)
                 #if !os(macOS)
                 .toolbarVisibility(.hidden, for: .tabBar)
                 #endif
@@ -58,6 +70,33 @@ struct MainTabView: View {
         }
         .tabViewStyle(.tabBarOnly)
         .environment(\.tabBarVisibility, tabBar)
+        // A finished practice closes all the pages it opened and lands on the Roadmap.
+        .onReceive(NotificationCenter.default.publisher(for: .uTalkPracticeFinished)) { _ in
+            homeStackID = UUID()
+            roadmapStackID = UUID()
+            selectedTab = .roadmap
+        }
+        // Whole roadmap finished: the U pops in with confetti (once).
+        .onChange(of: celebrationPending) { _, pending in
+            guard pending else { return }
+            // let the feedback screen finish closing onto the Roadmap first
+            // let the user land on the Roadmap and see the last day ticked first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation(.easeInOut(duration: 0.8)) { showCelebration = true }
+            }
+        }
+        .onAppear {
+            if celebrationPending { showCelebration = true }
+        }
+        .overlay {
+            if showCelebration {
+                CelebrationView {
+                    withAnimation(.easeInOut(duration: 0.5)) { showCelebration = false }
+                    celebrationPending = false
+                }
+                .transition(.opacity)
+            }
+        }
     }
 }
 
@@ -82,19 +121,39 @@ struct UTalkTabBar: View {
     @Binding var selection: UTalkTab
     @Namespace private var selectionAnimation
 
+    /// Home and Roadmap each have their own copy of the bar, so the underline can't just slide inside
+    /// one bar. Instead, the bar that appears starts the underline where the last bar left it and
+    /// slides it to the selected tab.
+    private static var lastIndicator: UTalkTab?
+    @State private var indicator: UTalkTab?
+
     var body: some View {
         HStack(spacing: 0) {
             tabButton("Home", icon: "house", tab: .home)
             tabButton("Roadmap", icon: "point.topleft.down.to.point.bottomright.curvepath", tab: .roadmap)
         }
-        .animation(.easeInOut(duration: 0.25), value: selection)
+        .onAppear {
+            indicator = Self.lastIndicator ?? selection
+            Self.lastIndicator = selection
+            if indicator != selection {
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.25)) { indicator = selection }
+                }
+            }
+        }
+        .onChange(of: selection) { _, newValue in
+            withAnimation(.easeInOut(duration: 0.25)) { indicator = newValue }
+        }
     }
 
     private func tabButton(_ title: LocalizedStringKey, icon: String, tab: UTalkTab) -> some View {
         let isSelected = selection == tab
+        let showsUnderline = (indicator ?? selection) == tab
         let forestGreen = Color(red: 39/255, green: 79/255, blue: 72/255)
 
         return Button {
+            guard selection != tab else { return }
+            Self.lastIndicator = selection   // the new tab's bar slides from here
             selection = tab
         } label: {
             VStack(spacing: 3) {
@@ -114,7 +173,7 @@ struct UTalkTabBar: View {
             .frame(height: 54)
             .overlay(alignment: .top) {
                 GeometryReader { geometry in
-                    if isSelected {
+                    if showsUnderline {
                         RoundedRectangle(cornerRadius: 1.5)
                             .fill(forestGreen)
                             .matchedGeometryEffect(id: "selectedTab", in: selectionAnimation)

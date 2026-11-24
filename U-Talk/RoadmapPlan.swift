@@ -2,9 +2,11 @@ import Foundation
 
 // The 6-day roadmap, built from the onboarding answers.
 //
-// Onboarding ("Which situations feel hardest?") promises "Your roadmap starts with these", so:
-//   • days 1…n are the situations the user picked (up to 3, in the order shown on that screen),
-//   • the remaining days are filled from the default order, skipping anything already in the plan.
+// 7-day roadmap:
+//   • Day 1 is always "Introducing Yourself" (you introduce yourself before ordering food or interviewing),
+//   • next, the situations picked in onboarding ("Which situations feel hardest?"): top priority,
+//   • then every other situation, so all six are covered by Day 7.
+//   Within the picked group and within the rest, lessons go from easier to harder (their level).
 // RoadmapView and HomeView both read the plan from here, so the map and Home always show the same lesson.
 
 struct RoadmapLesson: Hashable {
@@ -21,7 +23,8 @@ struct RoadmapLesson: Hashable {
 enum RoadmapPlan {
     /// "|"-separated situation keys saved at the end of onboarding.
     static let focusKey = "roadmapFocus"
-    static let totalDays = PracticeProgress.totalDays
+    /// Introducing Yourself + the six onboarding situations.
+    static let maxDays = 7
 
     // MARK: Lessons
 
@@ -30,7 +33,7 @@ enum RoadmapPlan {
                                            minutes: 5, scenarioID: "about-you")
     static let smallTalk = RoadmapLesson(title: "Small Talk",
                                          subtitle: "Keep a casual chat flowing naturally\nwithout running out of words.",
-                                         minutes: 6, scenarioID: "about-you")
+                                         minutes: 6, scenarioID: "small-talk")
     static let restaurant = RoadmapLesson(title: "At the Restaurant",
                                           subtitle: "Order a meal, ask a question and\nget the bill.",
                                           minutes: 6, scenarioID: "restaurant")
@@ -60,27 +63,38 @@ enum RoadmapPlan {
         ("Phone calls", phoneCall)
     ]
 
-    /// Used to fill the days after the user's chosen situations (and the whole plan if nothing was chosen).
-    static let defaultOrder: [RoadmapLesson] = [
-        introducing, restaurant, airport, interview, presenting, phoneCall, appointment
+    /// Every lesson from easiest to hardest. A lesson's position here is its level.
+    /// Face-to-face and predictable first; phone calls (no visual cues) and high-stakes speaking last.
+    static let levelOrder: [RoadmapLesson] = [
+        introducing,   // 1 talk about yourself
+        smallTalk,     // 2 casual chat
+        restaurant,    // 3 short, predictable exchange
+        airport,       // 4 give details, answer questions
+        appointment,   // 5 booking, dates and times
+        phoneCall,     // 6 no face, no visual cues
+        interview,     // 7 high stakes
+        presenting     // 8 speaking to an audience
     ]
+
+    static func level(of lesson: RoadmapLesson) -> Int {
+        levelOrder.firstIndex(of: lesson) ?? levelOrder.count
+    }
 
     // MARK: Plan
 
     static func lessons(focus: String) -> [RoadmapLesson] {
-        let chosen = Set(focus.split(separator: "|").map(String.init))
-        var plan: [RoadmapLesson] = []
-        var used = Set<String>()
+        let chosenKeys = Set(focus.split(separator: "|").map(String.init))
+        let chosen = situations.filter { chosenKeys.contains($0.key) }.map(\.lesson)
 
-        for item in situations where chosen.contains(item.key) && !used.contains(item.lesson.scenarioID) {
-            plan.append(item.lesson)
-            used.insert(item.lesson.scenarioID)
-        }
-        for lesson in defaultOrder where plan.count < totalDays && !used.contains(lesson.scenarioID) {
-            plan.append(lesson)
-            used.insert(lesson.scenarioID)
-        }
-        return Array(plan.prefix(totalDays))
+        let byLevel: (RoadmapLesson, RoadmapLesson) -> Bool = { level(of: $0) < level(of: $1) }
+        let picked = chosen.sorted(by: byLevel)
+        let others = situations.map(\.lesson).filter { !chosen.contains($0) }.sorted(by: byLevel)
+        return [introducing] + picked + others
+    }
+
+    /// Number of days in the roadmap for the saved onboarding answers.
+    static var currentDayCount: Int {
+        lessons(focus: UserDefaults.standard.string(forKey: focusKey) ?? "").count
     }
 
     /// Lesson for a day (1-based). Days past the end repeat the last lesson.

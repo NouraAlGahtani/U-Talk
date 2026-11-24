@@ -21,6 +21,8 @@ struct AIConversationPracticeView: View {
     @State private var loading = false
     @State private var showHint = false
     @State private var offline = false
+    /// False once the conversation is ended or left; late replies must not speak after that.
+    @State private var isActive = true
     @State private var notice: String?
     @State private var startedAt = Date()
     private let api = APIClient()
@@ -147,6 +149,7 @@ struct AIConversationPracticeView: View {
             if !isListening { ambience.resume() }
         }
         .onDisappear {
+            isActive = false
             speech.stop()
             voice.stop()
             ambience.stop()
@@ -205,7 +208,12 @@ struct AIConversationPracticeView: View {
         ZStack {
             Circle().fill(.white.opacity(0.05)).frame(width: 220, height: 220)
             Circle().fill(.white.opacity(0.08)).frame(width: 160, height: 160)
-            ULogo(size: 110)
+            // The U dressed for this scenario (waiter, pilot, interviewer…) inside the pale-lime badge,
+            // green U like the logo; its mouth moves while the AI speaks.
+            Circle().fill(UTalk.paleLime).frame(width: 150, height: 150)
+            ScenarioMascot(scenarioID: scenario.id, talking: voice.isSpeaking)
+                .frame(width: 150, height: 150)
+                .clipShape(Circle())
         }
         .scaleEffect(loading ? 0.96 : 1)
         .animation(loading ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) : .default,
@@ -339,13 +347,16 @@ struct AIConversationPracticeView: View {
                                                           voice: scenario.voiceName,
                                                           style: scenario.voiceStyle,
                                                           rate: scenario.voiceRate) {
-            guard !speech.listening else { return }   // never play over the user's answer
+            // The answer may arrive after the conversation was ended (Azure can be slow): stay quiet then.
+            guard isActive, !Task.isCancelled, !speech.listening else { return }
             if (try? voice.play(data)) != nil {
                 ambience.resume()                     // voice playback resets the audio session
                 return
             }
         }
-        guard !speech.listening else { return }
+        // Don't fall back to the iPhone voice if the request failed only because the screen was closed
+        // (that's what made the robot voice speak on the Roadmap).
+        guard isActive, !Task.isCancelled, !speech.listening else { return }
         voice.speak(text)
         ambience.resume()
     }
@@ -359,6 +370,7 @@ struct AIConversationPracticeView: View {
     }
 
     private func endConversation() {
+        isActive = false
         speech.stop()
         voice.stop()
         ambience.stop()
@@ -366,6 +378,8 @@ struct AIConversationPracticeView: View {
     }
 
     private func finish() {
+        isActive = false
+        voice.stop()
         speech.stop()
         voice.stop()
         ambience.stop()

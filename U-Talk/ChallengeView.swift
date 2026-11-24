@@ -71,15 +71,15 @@ struct ChallengeView: View {
         .onDisappear { tabBar.hidden = false }
         // Straight into the conversation: the wheel has already told them the
         // scene, so ScenarioIntroView would only repeat it.
-        .fullScreenCover(isPresented: $startChallenge, onDismiss: {
-            if finishedSession { dismiss() }
-        }) {
+        .fullScreenCover(isPresented: $startChallenge) {
             if let landed {
                 PracticeSessionContainer(scenario: scenes[landed],
                                          kind: .aiConversation,
                                          day: nil,
                                          userName: userName.isEmpty ? nil : userName) { didComplete in
                     finishedSession = didComplete
+                    // Switch to the Roadmap underneath first, so the wheel isn't shown again on the way out.
+                    if didComplete { NotificationCenter.default.post(name: .uTalkPracticeFinished, object: nil) }
                     startChallenge = false
                 }
             }

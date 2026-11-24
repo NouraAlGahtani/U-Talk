@@ -59,58 +59,27 @@ struct RoadmapView: View {
                             Circle()
                                 .fill(softCyan.opacity(0.55))
                                 .frame(width: 195, height: 195)
-                                .position(x: -82, y: 505)
+                                .position(x: -82, y: min(505, dayY(plan.count - 1) - 40))
 
-                            roadmapSegment(
-                                from: CGPoint(x: leftX, y: 36),
-                                to: CGPoint(x: rightX, y: 145),
-                                control1: CGPoint(x: leftX - 8, y: 103),
-                                control2: CGPoint(x: rightX + 25, y: 82),
-                                completed: completedDays >= 1
-                            )
-
-                            roadmapSegment(
-                                from: CGPoint(x: rightX, y: 145),
-                                to: CGPoint(x: leftX, y: 254),
-                                control1: CGPoint(x: rightX + 25, y: 217),
-                                control2: CGPoint(x: leftX - 30, y: 188),
-                                completed: completedDays >= 2
-                            )
-
-                            roadmapSegment(
-                                from: CGPoint(x: leftX, y: 254),
-                                to: CGPoint(x: rightX, y: 363),
-                                control1: CGPoint(x: leftX - 20, y: 322),
-                                control2: CGPoint(x: rightX + 20, y: 310),
-                                completed: completedDays >= 3
-                            )
-
-                            roadmapSegment(
-                                from: CGPoint(x: rightX, y: 363),
-                                to: CGPoint(x: leftX, y: 472),
-                                control1: CGPoint(x: rightX + 18, y: 426),
-                                control2: CGPoint(x: leftX - 25, y: 420),
-                                completed: completedDays >= 4
-                            )
-
-                            roadmapSegment(
-                                from: CGPoint(x: leftX, y: 472),
-                                to: CGPoint(x: rightX, y: 581),
-                                control1: CGPoint(x: leftX - 25, y: 535),
-                                control2: CGPoint(x: rightX + 20, y: 523),
-                                completed: completedDays >= 5
-                            )
+                            // Path pieces and day bubbles, only as many as this user's roadmap has.
+                            ForEach(0..<max(plan.count - 1, 0), id: \.self) { i in
+                                let seg = segment(i, leftX: leftX, rightX: rightX)
+                                roadmapSegment(from: seg.from, to: seg.to,
+                                               control1: seg.c1, control2: seg.c2,
+                                               completed: completedDays >= i + 1)
+                            }
 
                             // Roadmap Days
-                            roadmapDay(number: 1, title: plan[0].title, x: leftX, y: 36, side: .right, width: width)
-                            roadmapDay(number: 2, title: plan[1].title, x: rightX, y: 145, side: .left, width: width)
-                            roadmapDay(number: 3, title: plan[2].title, x: leftX, y: 254, side: .right, width: width)
-                            roadmapDay(number: 4, title: plan[3].title, x: rightX, y: 363, side: .left, width: width)
-                            roadmapDay(number: 5, title: plan[4].title, x: leftX, y: 472, side: .right, width: width)
-                            roadmapDay(number: 6, title: plan[5].title, x: rightX, y: 581, side: .left, width: width)
+                            ForEach(Array(plan.enumerated()), id: \.offset) { i, lesson in
+                                roadmapDay(number: i + 1, title: lesson.title,
+                                           x: i.isMultiple(of: 2) ? leftX : rightX,
+                                           y: dayY(i),
+                                           side: i.isMultiple(of: 2) ? .right : .left,
+                                           width: width)
+                            }
                         }
                     }
-                    .frame(height: 635)
+                    .frame(height: dayY(plan.count - 1) + 54)
 
                     Text("One step at a time.")
                         .font(.system(size: 15, weight: .medium))
@@ -122,6 +91,25 @@ struct RoadmapView: View {
             .background(.white)
         }
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// Vertical position of day `i` (0-based); days are 109 pt apart, zig-zagging left and right.
+    private func dayY(_ i: Int) -> CGFloat { 36 + 109 * CGFloat(max(i, 0)) }
+
+    /// Curve from day `i` to day `i + 1`, with the same hand-tuned bends as the original six-day map.
+    private func segment(_ i: Int, leftX: CGFloat, rightX: CGFloat)
+        -> (from: CGPoint, to: CGPoint, c1: CGPoint, c2: CGPoint) {
+        // (x offset of control 1, its y relative to the start day, x offset of control 2, its y)
+        let bends: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
+            (-8, 67, 25, 46), (25, 72, -30, 43), (-20, 68, 20, 56), (18, 63, -25, 57), (-25, 63, 20, 51)
+        ]
+        let b = bends[i % bends.count]
+        let startsLeft = i.isMultiple(of: 2)
+        let fromX = startsLeft ? leftX : rightX
+        let toX = startsLeft ? rightX : leftX
+        let y = dayY(i)
+        return (CGPoint(x: fromX, y: y), CGPoint(x: toX, y: dayY(i + 1)),
+                CGPoint(x: fromX + b.0, y: y + b.1), CGPoint(x: toX + b.2, y: y + b.3))
     }
 
     // Roadmap Lines

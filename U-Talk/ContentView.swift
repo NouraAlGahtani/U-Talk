@@ -106,7 +106,14 @@ struct ContentView: View {
         }
         // "Start over" in Profile → Account clears everything; go back to the welcome screen.
         .onChange(of: onboardingComplete) { _, done in
-            if !done && route == .home { navigate(to: .welcome) }
+            guard !done, route == .home else { return }
+            // Signed out: start completely fresh, with nothing filled in or picked.
+            userName = ""
+            selectedSituations = []
+            selectedHelpers = []
+            selectedFeedback = ""
+            selectedScenario = ""
+            navigate(to: .welcome)
         }
     }
 

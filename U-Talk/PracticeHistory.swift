@@ -185,7 +185,8 @@ enum SessionHistory {
 enum PracticeProgress {
     static let completedDaysKey = "completedRoadmapDays"   // RoadmapView
     static let currentDayKey = "currentPracticeDay"        // HomeView, ProfileView
-    static let totalDays = 6
+    /// Days in this user's roadmap (2–6, depends on what they picked in onboarding).
+    static var totalDays: Int { RoadmapPlan.currentDayCount }
 
     /// A session counts as completing the day when the user answered every planned step
     /// (3 answers in an AI conversation) or recorded at least one script take.
@@ -204,6 +205,9 @@ enum PracticeProgress {
         guard day == completed + 1, day <= totalDays else { return }
         defaults.set(day, forKey: completedDaysKey)
         defaults.set(min(day + 1, totalDays), forKey: currentDayKey)
+        if day == totalDays {
+            defaults.set(true, forKey: CelebrationView.pendingKey)   // MainTabView shows the celebration
+        }
         Task { await PracticeReminders.reschedule() }   // reminder text names the next lesson
     }
 }

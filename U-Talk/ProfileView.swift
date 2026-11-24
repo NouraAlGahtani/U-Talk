@@ -16,6 +16,7 @@ struct ProfileMenuView: View {
     @AppStorage("userName") private var name: String = ""
     @AppStorage("userAge") private var age: String = ""
     @AppStorage("currentPracticeDay") private var currentDay: Int = 1
+    @AppStorage(RoadmapPlan.focusKey) private var roadmapFocus: String = ""
     @Environment(\.dismiss) private var dismiss
 
     private var displayName: String {
@@ -82,7 +83,7 @@ struct ProfileMenuView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
 
-                                Text("Day \(min(currentDay, 6)) of 6")
+                                Text("Day \(min(currentDay, RoadmapPlan.lessons(focus: roadmapFocus).count)) of \(RoadmapPlan.lessons(focus: roadmapFocus).count)")
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(darkGreen.opacity(0.8))
                                     .lineLimit(1)
@@ -230,6 +231,7 @@ struct AccountDetailView: View {
 
     @State private var draftName = ""
     @State private var draftAge = ""
+    @State private var confirmSignOut = false
     @State private var savedToast = false
     @FocusState private var focusedField: Field?
 
@@ -368,7 +370,7 @@ struct AccountDetailView: View {
                     .frame(height: 1.2)
 
                 Text(
-                    "Signing out takes you back to the start screen.\nYour sessions and journal stay saved."
+                    "Signing out resets U-Talk on this iPhone: your name,\nroadmap, settings and practice history are cleared."
                 )
                 .font(.system(size: 14))
                 .foregroundColor(darkGreen.opacity(0.75))
@@ -377,8 +379,7 @@ struct AccountDetailView: View {
                 .lineSpacing(4)
 
                 Button(action: {
-                    // Back to the start screen (ContentView watches this key). History is kept.
-                    UserDefaults.standard.set(false, forKey: "utalk.onboardingComplete")
+                    confirmSignOut = true
                 }) {
                     HStack(spacing: 12) {
                         Text("Sign out")
@@ -398,6 +399,15 @@ struct AccountDetailView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .confirmationDialog("Sign out and reset U-Talk?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+                    Button("Sign out", role: .destructive) {
+                        // Clears everything, then ContentView (watching "utalk.onboardingComplete") shows the welcome screen.
+                        AppReset.resetAllData()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Your name, roadmap, settings and practice history will be removed from this iPhone.")
+                }
             }
             .padding(.horizontal, 22)
             .padding(.bottom, 12)

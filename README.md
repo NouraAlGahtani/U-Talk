@@ -121,12 +121,8 @@ they're huge, covered by dataset licences, or contain someone's voice.
 - Practice history is stored **only on the device**, as text and numbers. No audio is kept.
 - The backend sees only the text of the conversation, so it can write the AI's reply.
 
-## 👩‍💻 Team
 
-| | |
-|---|---|
-| **Noura AlGahtani** | AI model, Core ML integration, practice screens, backend |
-| **Jana Almuhayzi** | Onboarding, Home, Roadmap, Challenge mode, history |
-| **Maysam** | Profile & Settings |
+
+
 
 <p align="center"><sub>Made with 💚 and a lot of patience. One step at a time.</sub></p>

@@ -69,7 +69,7 @@ struct PracticeScenario: Identifiable, Hashable {
     var plannedTurns: Int { aiSteps.count }
 
     static let personal: [PracticeScenario] = [.aboutYou]
-    static let everyday: [PracticeScenario] = [.restaurant, .appointment, .interview, .presentation, .phoneCall, .airport]
+    static let everyday: [PracticeScenario] = [.smallTalk, .restaurant, .appointment, .interview, .presentation, .phoneCall, .airport]
     static let rolePlays: [PracticeScenario] = [.missingCelebrity, .suspectInterview, .villainsDeal, .secretAgent, .gameMaster]
     static let all: [PracticeScenario] = personal + everyday + rolePlays
 
@@ -229,6 +229,42 @@ extension PracticeScenario {
             "Good morning, everyone. Today I would like to talk about how small daily habits can improve our health.",
             "First, I will share three simple habits, and then I will take your questions.",
             "Thank you for listening. Are there any questions?"
+        ]
+    )
+
+    static let smallTalk = PracticeScenario(
+        id: "small-talk",
+        title: "Small Talk",
+        symbol: "cup.and.saucer",
+        illustrationAsset: "scene_small_talk",
+        backendMode: "Small talk at a coffee break: you are a friendly new coworker the user just met by the coffee machine. Chat casually about the weekend, the weather, hobbies and food. Keep it light, ask easy open questions, share a little about yourself too. Ask one thing at a time.",
+        category: .everyday,
+        voiceName: nil,
+        voiceStyle: "happy",
+        voiceRate: "-5%",
+        ambienceAsset: nil,
+        aiRoleLabel: "AI COWORKER",
+        aiSummary: "Chat with a friendly new coworker at the coffee machine. Keep a light conversation going.",
+        aiOpening: "Hi! I don't think we've met. I just started here. How's your week going?",
+        aiSteps: ["Answer how your week is going", "Talk about your weekend plans", "Ask them a question back"],
+        aiGoals: ["Keeping a chat going", "Sharing a little", "Asking questions back"],
+        aiHints: [
+            "Try: “Nice to meet you! My week is going well, a bit busy.”",
+            "Try: “This weekend I'm going to visit my family. What about you?”",
+            "Try: “How are you finding it here so far?”"
+        ],
+        offlineReplies: [
+            "Busy weeks are the worst! Do you have anything fun planned for the weekend?",
+            "That sounds lovely. I think I'll try the new café near the office.",
+            "It was really nice chatting with you. See you around!"
+        ],
+        scriptSummary: "Read a short coffee-break chat aloud, record it, and listen back.",
+        scriptSteps: ["Read the full chat aloud", "Keep a relaxed pace", "Smile while you speak"],
+        scriptGoals: ["Relaxed tone", "Steady pace", "Smooth rhythm"],
+        scriptLines: [
+            "Hi! Nice to meet you. My week is going well, thanks.",
+            "This weekend I'm going to visit my family and try a new café.",
+            "How about you? Do you have any plans?"
         ]
     )
 
