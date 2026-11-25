@@ -5,7 +5,7 @@ import Combine
 
 /// Same speech-to-text behavior as SpeechManager (on-device, partial results),
 /// but it also saves each answer as a 16 kHz mono WAV so the WavLM model and
-/// the pause analysis can run on conversation speech. SpeechManager is left unchanged.
+/// the pause analysis can run on conversation speech. SpeechManager is left unchanged. last update
 @MainActor
 final class CapturingSpeechManager: ObservableObject {
     @Published var transcript = ""
